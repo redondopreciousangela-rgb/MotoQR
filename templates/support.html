@@ -39,14 +39,35 @@
     <div class="section-bar" style="margin-bottom:12px"><h2 style="font-size:0.95rem">NEW CONVERSATION</h2></div>
     <form method="post">
       <div class="field">
-        <label>RELATED MOTORCYCLE (optional)</label>
+        <label>RELATED MOTORCYCLE</label>
+        {% if active_rentals %}
         <select name="motorcycle">
-          <option value="">— Not related to a specific unit —</option>
           {% for r in active_rentals %}
-          <option value="{{ r.motorcycle }}">{{ r.motorcycle }} ({{ r.status }})</option>
+          <option value="{{ r.motorcycle }}" {% if r.motorcycle == detected_unit %}selected{% endif %}>
+            {{ r.motorcycle }} ({{ r.status }}){% if r.contact %} · {{ r.contact }}{% endif %}
+          </option>
           {% endfor %}
+          <option value="">— Not related to a specific unit —</option>
         </select>
+        <p class="hint">
+          {% if detected_unit %}
+          Auto-detected: <strong style="color:var(--cyan)">{{ detected_unit }}</strong>
+          {% else %}
+          Select the unit you are currently using.
+          {% endif %}
+        </p>
+        {% else %}
+        <input type="text" name="motorcycle" placeholder="No active rental — optional unit name" />
+        <p class="hint">No active rental found. You can still type a unit name or leave blank.</p>
+        {% endif %}
       </div>
+      {% if client_phone %}
+      <div class="field">
+        <label>YOUR CONTACT (from rental)</label>
+        <input type="text" value="{{ client_phone }}" disabled />
+        <p class="hint">Shown to support so they can reach you.</p>
+      </div>
+      {% endif %}
       <div class="field">
         <label>SUBJECT <span class="req">*</span></label>
         <input name="subject" placeholder="e.g. Unit stalled mid-travel" required maxlength="120" />

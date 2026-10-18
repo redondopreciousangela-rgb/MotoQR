@@ -21,7 +21,7 @@
         <strong>{{ t.subject }}</strong>
         <span class="pill {{ 'reserved' if t.status == 'Open' else '' }}">{{ t.status }}</span>
       </div>
-      <div class="chat-list-meta">{{ t.id }} · {{ t.username }} · {{ t.updated or t.date }}{% if t.motorcycle and t.motorcycle != '—' %} · {{ t.motorcycle }}{% endif %}</div>
+      <div class="chat-list-meta">{{ t.id }} · {{ t.username }}{% if t.contact and t.contact != '—' %} · {{ t.contact }}{% endif %} · {{ t.updated or t.date }}{% if t.motorcycle and t.motorcycle != '—' %} · {{ t.motorcycle }}{% endif %}</div>
       {% set last = (t.messages or [])[-1] if t.messages else none %}
       {% if last %}
       <div class="chat-list-preview">{{ last.from }}: {{ last.text }}</div>

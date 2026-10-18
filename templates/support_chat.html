@@ -7,11 +7,12 @@
   </a>
   <div>
     <div class="section-bar"><h2>{{ ticket.subject }}</h2></div>
-    <p class="subtitle">
+    <p class="subtitle" id="chatMeta">
       {{ ticket.id }}
       {% if is_admin %} · {{ ticket.username }}{% endif %}
-      {% if ticket.motorcycle and ticket.motorcycle != '—' %} · {{ ticket.motorcycle }}{% endif %}
-      · <span class="pill {{ 'reserved' if ticket.status == 'Open' else '' }}">{{ ticket.status }}</span>
+      {% if ticket.contact and ticket.contact != '—' %} · <span id="chatPhone">{{ ticket.contact }}</span>{% endif %}
+      {% if ticket.motorcycle and ticket.motorcycle != '—' %} · <span id="chatUnit">{{ ticket.motorcycle }}</span>{% endif %}
+      · <span class="pill {{ 'reserved' if ticket.status == 'Open' else '' }}" id="chatStatus">{{ ticket.status }}</span>
     </p>
   </div>
 </div>
@@ -19,35 +20,36 @@
 <div class="chat-shell">
   <div class="chat-messages" id="chatMessages">
     {% for m in ticket.messages or [] %}
-    <div class="chat-bubble {% if m.from == 'admin' %}chat-admin{% else %}chat-client{% endif %}">
-      <div class="chat-bubble-meta">
-        {% if m.from == 'admin' %}Support{% else %}{{ m.username or 'You' }}{% endif %}
-        · {{ m.date }}
+      {% set mine = (is_admin and m.from == 'admin') or ((not is_admin) and m.from == 'client') %}
+      <div class="chat-bubble {% if mine %}chat-mine{% else %}chat-theirs{% endif %}">
+        <div class="chat-bubble-meta">
+          {% if m.from == 'admin' %}Support{% else %}{{ m.username or 'Client' }}{% endif %}
+          · {{ m.date }}
+        </div>
+        <div class="chat-bubble-text">{{ m.text }}</div>
       </div>
-      <div class="chat-bubble-text">{{ m.text }}</div>
-    </div>
     {% else %}
-    <div class="empty">No messages yet.</div>
+    <div class="empty" id="chatEmpty">No messages yet.</div>
     {% endfor %}
   </div>
 
   {% if ticket.status != 'Closed' %}
-  <form method="post" class="chat-composer">
-    <textarea name="message" rows="2" placeholder="Type a message…" required autofocus></textarea>
-    <button class="btn filled" type="submit" name="action" value="reply" aria-label="Send">
+  <form method="post" class="chat-composer" id="chatForm">
+    <textarea name="message" id="chatInput" rows="2" placeholder="Type a message…" required autofocus></textarea>
+    <button class="btn filled" type="submit" name="action" value="reply" aria-label="Send" id="chatSend">
       <i data-lucide="send"></i>
     </button>
   </form>
   {% else %}
-  <div class="chat-closed-banner">This conversation is closed.</div>
+  <div class="chat-closed-banner" id="chatClosed">This conversation is closed.</div>
   {% endif %}
 
   {% if is_admin %}
-  <form method="post" class="chat-admin-actions">
+  <form method="post" class="chat-admin-actions" id="chatAdminActions">
     {% if ticket.status != 'Closed' %}
-    <button class="btn" type="submit" name="action" value="close">Close conversation</button>
+    <button class="btn" type="submit" name="action" value="close" id="btnClose">Close conversation</button>
     {% else %}
-    <button class="btn filled" type="submit" name="action" value="reopen">Reopen</button>
+    <button class="btn filled" type="submit" name="action" value="reopen" id="btnReopen">Reopen</button>
     {% endif %}
   </form>
   {% endif %}
@@ -56,7 +58,123 @@
 {% block scripts %}
 <script>
   if (window.lucide) lucide.createIcons();
+
+  const TICKET_ID = {{ ticket.id|tojson }};
+  const IS_ADMIN = {{ 'true' if is_admin else 'false' }};
+  const API_URL = {{ url_for('api_support_thread', ticket_id=ticket.id)|tojson }};
   const box = document.getElementById('chatMessages');
-  if (box) box.scrollTop = box.scrollHeight;
+  const form = document.getElementById('chatForm');
+  const input = document.getElementById('chatInput');
+  let lastCount = {{ (ticket.messages or [])|length }};
+  let currentStatus = {{ ticket.status|tojson }};
+
+  function scrollBottom() {
+    if (box) box.scrollTop = box.scrollHeight;
+  }
+  scrollBottom();
+
+  function escapeHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s || '';
+    return d.innerHTML;
+  }
+
+  function isMine(m) {
+    return (IS_ADMIN && m.from === 'admin') || (!IS_ADMIN && m.from === 'client');
+  }
+
+  function renderMessages(messages) {
+    if (!box) return;
+    if (!messages || !messages.length) {
+      box.innerHTML = '<div class="empty" id="chatEmpty">No messages yet.</div>';
+      return;
+    }
+    box.innerHTML = messages.map(m => {
+      const mine = isMine(m);
+      const who = m.from === 'admin' ? 'Support' : (m.username || 'Client');
+      return `<div class="chat-bubble ${mine ? 'chat-mine' : 'chat-theirs'}">
+        <div class="chat-bubble-meta">${escapeHtml(who)} · ${escapeHtml(m.date || '')}</div>
+        <div class="chat-bubble-text">${escapeHtml(m.text || '')}</div>
+      </div>`;
+    }).join('');
+    scrollBottom();
+  }
+
+  function updateStatus(status) {
+    currentStatus = status;
+    const el = document.getElementById('chatStatus');
+    if (el) {
+      el.textContent = status;
+      el.className = 'pill ' + (status === 'Open' ? 'reserved' : '');
+    }
+  }
+
+  async function poll() {
+    try {
+      const res = await fetch(API_URL, { credentials: 'same-origin' });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.ok) return;
+      const msgs = data.messages || [];
+      if (msgs.length !== lastCount || data.status !== currentStatus) {
+        lastCount = msgs.length;
+        renderMessages(msgs);
+        updateStatus(data.status);
+      }
+      const phone = document.getElementById('chatPhone');
+      if (phone && data.contact && data.contact !== '—') phone.textContent = data.contact;
+      const unit = document.getElementById('chatUnit');
+      if (unit && data.motorcycle && data.motorcycle !== '—') unit.textContent = data.motorcycle;
+    } catch (e) {}
+  }
+
+  setInterval(poll, 2500);
+
+  if (form && input) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      const btn = document.getElementById('chatSend');
+      if (btn) btn.disabled = true;
+      try {
+        const body = new FormData();
+        body.append('message', text);
+        body.append('action', 'reply');
+        const res = await fetch(API_URL, { method: 'POST', body, credentials: 'same-origin' });
+        const data = await res.json();
+        if (data.ok) {
+          input.value = '';
+          lastCount = (data.messages || []).length;
+          renderMessages(data.messages || []);
+          updateStatus(data.status || 'Open');
+        }
+      } catch (err) {
+        form.submit();
+      } finally {
+        if (btn) btn.disabled = false;
+        input.focus();
+        if (window.lucide) lucide.createIcons();
+      }
+    });
+  }
+
+  const adminForm = document.getElementById('chatAdminActions');
+  if (adminForm) {
+    adminForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const actionBtn = e.submitter;
+      const action = actionBtn ? actionBtn.value : 'close';
+      const body = new FormData();
+      body.append('action', action);
+      try {
+        const res = await fetch(API_URL, { method: 'POST', body, credentials: 'same-origin' });
+        const data = await res.json();
+        if (data.ok) window.location.reload();
+      } catch (err) {
+        adminForm.submit();
+      }
+    });
+  }
 </script>
 {% endblock %}
