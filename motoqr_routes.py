@@ -100,6 +100,35 @@ def register_routes(app):
         state = request.form.get("maintenance_status", "Up to date")
         if state not in valid:
             state = "Up to date"
+        # Keep the fleet status consistent with maintenance, and restore active
+        # rental states when maintenance is cleared.
+        blocked_states = ("In maintenance", "Out of service")
+        previous_maintenance = bike.get("maintenance_status", "Up to date")
+        if state in blocked_states:
+            if previous_maintenance not in blocked_states:
+                bike["maintenance_previous_status"] = bike.get("status", "Available")
+            bike["status"] = state
+        else:
+            active_rentals = [
+                rental for rental in get_rentals()
+                if rental.get("motorcycle_id") == bike_id
+                and rental.get("status") in ("Pending Confirmation", "Rented", "Overdue")
+            ]
+            current_rental = next(
+                (r for r in active_rentals if r.get("status") in ("Rented", "Overdue")),
+                None,
+            )
+            pending_rental = next(
+                (r for r in active_rentals if r.get("status") == "Pending Confirmation"),
+                None,
+            )
+            if current_rental:
+                bike["status"] = current_rental.get("status", "Rented")
+            elif pending_rental:
+                bike["status"] = "Reserved"
+            else:
+                bike["status"] = "Available"
+            bike.pop("maintenance_previous_status", None)
         bike["maintenance_status"] = state
         bike["maintenance_notes"] = request.form.get("maintenance_notes", "").strip()[:500]
         bike["maintenance_updated"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -117,8 +146,11 @@ def register_routes(app):
         if not bike:
             flash("Motorcycle not found.", "danger")
             return redirect(url_for("client_home"))
-        if bike["status"] != "Available":
-            flash(f"This unit is currently {bike['status'].lower()}.", "warning")
+        if bike.get("maintenance_status") in ("In maintenance", "Out of service"):
+            flash(f"This unit is currently {bike['maintenance_status'].lower()} and cannot be rented.", "warning")
+            return redirect(url_for("client_home"))
+        if bike.get("status") != "Available":
+            flash(f"This unit is currently {bike.get('status', 'unavailable').lower()}.", "warning")
             return redirect(url_for("client_home"))
         if request.method == "POST":
             contact = normalize_phone(request.form.get("contact", "").strip())
