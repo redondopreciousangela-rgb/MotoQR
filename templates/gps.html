@@ -1,8 +1,32 @@
 {% extends "base.html" %}
 {% block title %}GPS Tracker · MotoQR{% endblock %}
 {% block content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin="" />
+<style>
+  #map {
+    width: 100%;
+    height: 420px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: #0b1220;
+  }
+  .leaflet-container { background: #0b1220; font-family: "Segoe UI", system-ui, sans-serif; }
+  .moto-marker {
+    background: #00e5ff;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    width: 14px !important;
+    height: 14px !important;
+  }
+  .moto-marker.overdue {
+    background: #ff3b5c;
+  }
+</style>
+
 <div class="section-bar"><h2>REAL-TIME GPS TRACKER</h2></div>
-<p class="subtitle">Simulated live positions for active rentals (demo mode)</p>
+<p class="subtitle">Live positions for active rentals</p>
 
 <div class="gps-layout">
   <div class="gps-list" id="gpsList">
@@ -18,72 +42,76 @@
       {% endfor %}
     {% endif %}
   </div>
-  <div class="gps-map">
-    <canvas id="gpsCanvas"></canvas>
-  </div>
+  <div id="map"></div>
 </div>
-<p style="color:var(--dim);font-size:0.8rem;margin-top:10px" id="gpsStatus">Simulation · updates every 2s</p>
+<p style="color:var(--dim);font-size:0.8rem;margin-top:10px" id="gpsStatus">Updating every 2s</p>
 {% endblock %}
 
 {% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
 <script>
-const canvas = document.getElementById('gpsCanvas');
-const ctx = canvas.getContext('2d');
 const listEl = document.getElementById('gpsList');
 const statusEl = document.getElementById('gpsStatus');
 
-function resize() {
-  const parent = canvas.parentElement;
-  canvas.width = parent.clientWidth;
-  canvas.height = Math.max(360, parent.clientHeight);
-}
-window.addEventListener('resize', resize);
-resize();
+const map = L.map('map', {
+  zoomControl: true,
+  attributionControl: true,
+}).setView([14.5995, 120.9842], 12);
 
-function latlngToXY(lat, lng, w, h) {
-  const minLat = 14.45, maxLat = 14.75, minLng = 120.90, maxLng = 121.10;
-  const x = (lng - minLng) / (maxLng - minLng) * (w - 40) + 20;
-  const y = (maxLat - lat) / (maxLat - minLat) * (h - 40) + 20;
-  return [x, y];
-}
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+}).addTo(map);
 
-function draw(units) {
-  const w = canvas.width, h = canvas.height;
-  ctx.fillStyle = '#0b1220';
-  ctx.fillRect(0, 0, w, h);
-  ctx.strokeStyle = '#152038';
-  for (let i = 0; i < w; i += 40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,h); ctx.stroke(); }
-  for (let j = 0; j < h; j += 40) { ctx.beginPath(); ctx.moveTo(0,j); ctx.lineTo(w,j); ctx.stroke(); }
-  ctx.fillStyle = '#00e5ff';
-  ctx.font = '12px Segoe UI';
-  ctx.fillText('N', 12, 18);
-  ctx.fillStyle = '#4a5878';
-  ctx.fillText('METRO MANILA · SIMULATED', w/2 - 80, h - 12);
+const markers = {};
 
-  if (!units.length) {
-    ctx.fillStyle = '#8394b0';
-    ctx.fillText('No active rentals to track', w/2 - 80, h/2);
-    return;
-  }
-  units.forEach(u => {
-    const [x, y] = latlngToXY(u.lat, u.lng, w, h);
-    ctx.beginPath();
-    ctx.arc(x, y, 8, 0, Math.PI * 2);
-    ctx.fillStyle = u.status === 'Overdue' ? '#ff3b5c' : '#00e5ff';
-    ctx.fill();
-    ctx.strokeStyle = '#fff';
-    ctx.stroke();
-    ctx.fillStyle = '#eaf0fa';
-    ctx.font = 'bold 11px Segoe UI';
-    ctx.fillText((u.id || '').slice(0, 4), x - 12, y - 12);
+function markerIcon(overdue) {
+  return L.divIcon({
+    className: '',
+    html: `<div class="moto-marker${overdue ? ' overdue' : ''}"></div>`,
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
   });
+}
+
+function updateMarkers(units) {
+  const seen = new Set();
+  units.forEach(u => {
+    const id = u.id;
+    seen.add(id);
+    const latlng = [u.lat, u.lng];
+    const popup = `<strong>${u.id}</strong> · ${u.name}<br/>Rider: ${u.username}<br/>${u.status}<br/>${u.lat}, ${u.lng}`;
+    if (markers[id]) {
+      markers[id].setLatLng(latlng);
+      markers[id].setPopupContent(popup);
+      markers[id].setIcon(markerIcon(u.status === 'Overdue'));
+    } else {
+      markers[id] = L.marker(latlng, { icon: markerIcon(u.status === 'Overdue') })
+        .addTo(map)
+        .bindPopup(popup);
+    }
+  });
+  Object.keys(markers).forEach(id => {
+    if (!seen.has(id)) {
+      map.removeLayer(markers[id]);
+      delete markers[id];
+    }
+  });
+  if (units.length === 1) {
+    map.setView([units[0].lat, units[0].lng], 14);
+  } else if (units.length > 1) {
+    const group = L.featureGroup(Object.values(markers));
+    map.fitBounds(group.getBounds().pad(0.2));
+  }
 }
 
 async function refresh() {
   try {
     const res = await fetch('{{ url_for("api_gps") }}');
     const units = await res.json();
-    draw(units);
+    updateMarkers(units);
     if (!units.length) {
       listEl.innerHTML = '<div class="empty">No active tracked units</div>';
     } else {
@@ -94,12 +122,14 @@ async function refresh() {
           Rider: ${u.username} · ${u.status}
         </div>`).join('');
     }
-    statusEl.textContent = `Simulation · ${units.length} unit(s) · ${new Date().toLocaleTimeString()}`;
+    statusEl.textContent = `${units.length} unit(s) tracked · ${new Date().toLocaleTimeString()}`;
   } catch (e) {
     statusEl.textContent = 'Failed to refresh GPS data';
   }
 }
+
 refresh();
 setInterval(refresh, 2000);
+setTimeout(() => map.invalidateSize(), 200);
 </script>
 {% endblock %}
