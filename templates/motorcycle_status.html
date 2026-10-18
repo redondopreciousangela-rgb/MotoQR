@@ -11,6 +11,8 @@
     main{width:min(680px,100%);border:1px solid var(--border);border-radius:20px;background:var(--surface);padding:clamp(20px,5vw,36px)}
     .brand{letter-spacing:.15em;color:var(--cyan);font-weight:800;font-size:.85rem}.unit{color:var(--muted);font-size:.8rem;margin-top:24px}
     h1{font-size:clamp(1.6rem,5vw,2.2rem);margin:4px 0 16px}.pill{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:5px 12px;font-weight:700;font-size:.85rem}
+    .bike-photo{display:block;width:100%;max-height:320px;object-fit:contain;background:#fff;border-radius:14px;margin:18px 0;padding:10px}
+    .photo-fallback{display:none;color:var(--muted);font-size:.85rem}
     .status{color:var(--cyan)}.new{color:var(--green);border-color:var(--green)}.maintenance{margin-top:20px;padding:16px;border:1px solid var(--border);border-radius:12px}
     dl{display:grid;grid-template-columns: minmax(120px, .8fr) 1.2fr;gap:10px;margin:20px 0}dt{color:var(--muted)}dd{margin:0;overflow-wrap:anywhere}
     .notes{white-space:pre-wrap;overflow-wrap:anywhere}.foot{color:var(--muted);font-size:.8rem;margin-top:24px}
@@ -21,6 +23,8 @@
   <div class="brand">◆ MOTOQR · MOTORCYCLE STATUS</div>
   <div class="unit">UNIT {{ bike.id }}</div>
   <h1>{{ bike.name }}</h1>
+  <img class="bike-photo" src="{{ url_for('serve_image', filename=bike.id + '.jpg') }}" alt="{{ bike.name }} motorcycle photo" onerror="this.style.display='none';document.getElementById('photoFallback').style.display='block';">
+  <p class="photo-fallback" id="photoFallback">Motorcycle photo is not available for this unit yet.</p>
   <p><span class="pill status" id="bikeStatus">{{ bike.status }}</span>
   <span class="pill new" id="newLabel" {% if not is_new %}hidden{% endif %}>New!</span></p>
   <dl>
