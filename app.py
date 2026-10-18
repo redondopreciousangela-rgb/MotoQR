@@ -432,12 +432,21 @@ def admin_home():
     bikes = get_motorcycles()
     rentals = get_rentals()
     pending = [r for r in rentals if r.get("status") == "Pending Confirmation"]
+    returns = get_returns()
+    stats = {
+        "total": len(bikes),
+        "available": sum(1 for b in bikes if b.get("status") == "Available"),
+        "rented": sum(1 for b in bikes if b.get("status") in ("Rented", "Overdue")),
+        "pending_pay": sum(1 for r in rentals if r.get("status") == "Pending Confirmation"),
+        "returns": sum(1 for r in returns if r.get("status") == "Pending"),
+        "overdue": sum(1 for r in rentals if r.get("status") == "Overdue"),
+    }
     return render_template(
         "admin_home.html", user=current_user(), bikes=bikes, rentals=rentals,
-        pending_count=len(pending),
-        available=sum(1 for b in bikes if b["status"] == "Available"),
-        reserved=sum(1 for b in bikes if b["status"] == "Reserved"),
-        rented=sum(1 for b in bikes if b["status"] in ("Rented", "Overdue")),
+        stats=stats, pending_count=len(pending),
+        available=stats["available"],
+        reserved=sum(1 for b in bikes if b.get("status") == "Reserved"),
+        rented=stats["rented"],
         open_support=open_support_count(),
         unread=unread_count(session["username"]),
     )
