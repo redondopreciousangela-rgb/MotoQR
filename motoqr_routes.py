@@ -153,7 +153,7 @@ def register_routes(app):
             return redirect(url_for("pending_payments"))
         pending = [r for r in rentals if r.get("status") == "Pending Confirmation"]
         return render_template("pending_payments.html", user=current_user(),
-                               rentals=pending, unread=unread_count(session["username"]))
+                               pending=pending, unread=unread_count(session["username"]))
 
     @app.route("/admin/all-rentals")
     @admin_required
