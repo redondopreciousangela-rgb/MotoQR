@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#070a12" />
   <title>{% block title %}MotoQR{% endblock %}</title>
+  <script src="https://unpkg.com/lucide@0.460.0"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 </head>
 <body>
@@ -13,9 +14,6 @@
     <div class="topbar-left">
       <button class="nav-toggle" id="navToggle" aria-label="Open menu" type="button">
         <span></span><span></span><span></span>
-      </button>
-      <button class="back-btn" id="backBtn" type="button" aria-label="Go back" title="Back">
-        ←
       </button>
       <div class="brand">
         <span class="diamond">◆</span>
@@ -55,25 +53,27 @@
           <div class="brand-sub">{{ user.username }} · {{ user.role }}</div>
         </div>
       </div>
-      <button type="button" class="sidebar-close" id="sidebarClose" aria-label="Close menu">&times;</button>
+      <button type="button" class="sidebar-close" id="sidebarClose" aria-label="Close menu">
+        <i data-lucide="x"></i>
+      </button>
     </div>
     <nav class="sidebar-nav">
       {% if user.role == 'Admin' %}
-        <a href="{{ url_for('admin_home') }}">Fleet</a>
-        <a href="{{ url_for('pending_payments') }}">Payments</a>
-        <a href="{{ url_for('all_rentals') }}">Rentals</a>
-        <a href="{{ url_for('return_requests') }}">Returns</a>
-        <a href="{{ url_for('gps_tracker') }}">GPS</a>
-        <a href="{{ url_for('users_list') }}">Users</a>
+        <a href="{{ url_for('admin_home') }}"><i data-lucide="bike"></i> Fleet</a>
+        <a href="{{ url_for('pending_payments') }}"><i data-lucide="wallet"></i> Payments</a>
+        <a href="{{ url_for('all_rentals') }}"><i data-lucide="clipboard-list"></i> Rentals</a>
+        <a href="{{ url_for('return_requests') }}"><i data-lucide="undo-2"></i> Returns</a>
+        <a href="{{ url_for('gps_tracker') }}"><i data-lucide="map-pin"></i> GPS</a>
+        <a href="{{ url_for('users_list') }}"><i data-lucide="users"></i> Users</a>
       {% else %}
-        <a href="{{ url_for('client_home') }}">Browse</a>
-        <a href="{{ url_for('my_rentals') }}">My Rentals</a>
-        <a href="{{ url_for('return_rent') }}">Return</a>
+        <a href="{{ url_for('client_home') }}"><i data-lucide="layout-grid"></i> Browse</a>
+        <a href="{{ url_for('my_rentals') }}"><i data-lucide="clipboard-list"></i> My Rentals</a>
+        <a href="{{ url_for('return_rent') }}"><i data-lucide="undo-2"></i> Return</a>
       {% endif %}
       <a href="{{ url_for('notifications') }}">
-        Alerts{% if unread %} <span class="badge">{{ unread }}</span>{% endif %}
+        <i data-lucide="bell"></i> Alerts{% if unread %} <span class="badge">{{ unread }}</span>{% endif %}
       </a>
-      <a href="{{ url_for('logout') }}" class="danger">Logout</a>
+      <a href="{{ url_for('logout') }}" class="danger"><i data-lucide="log-out"></i> Logout</a>
     </nav>
   </aside>
   {% endif %}
@@ -84,7 +84,7 @@
         {% for category, message in messages %}
           <div class="toast toast-{{ category }}" role="status">
             <span class="toast-msg">{{ message }}</span>
-            <button type="button" class="toast-close" aria-label="Dismiss">&times;</button>
+            <button type="button" class="toast-close" aria-label="Dismiss"><i data-lucide="x"></i></button>
           </div>
         {% endfor %}
       {% endif %}
@@ -97,12 +97,12 @@
 
   <footer class="footer">MotoQR · Motorcycle Rental System</footer>
   <script>
+    if (window.lucide) lucide.createIcons();
     (function () {
       const toggle = document.getElementById('navToggle');
       const sidebar = document.getElementById('sidebar');
       const overlay = document.getElementById('sidebarOverlay');
       const closeBtn = document.getElementById('sidebarClose');
-
       function openSidebar() {
         if (!sidebar) return;
         sidebar.classList.add('open');
@@ -117,26 +117,11 @@
         sidebar.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('sidebar-open');
       }
-
       if (toggle) toggle.addEventListener('click', openSidebar);
       if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
       if (overlay) overlay.addEventListener('click', closeSidebar);
-      if (sidebar) {
-        sidebar.querySelectorAll('a').forEach(a => a.addEventListener('click', closeSidebar));
-      }
-
-      const backBtn = document.getElementById('backBtn');
-      if (backBtn) {
-        backBtn.addEventListener('click', () => {
-          if (window.history.length > 1) {
-            window.history.back();
-          } else {
-            window.location.href = "{{ url_for('index') }}";
-          }
-        });
-      }
+      if (sidebar) sidebar.querySelectorAll('a').forEach(a => a.addEventListener('click', closeSidebar));
     })();
-
     (function () {
       const stack = document.getElementById('toastStack');
       if (!stack) return;
