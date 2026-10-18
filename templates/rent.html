@@ -25,7 +25,10 @@
   <form method="post" enctype="multipart/form-data" id="rentForm">
     <div class="field">
       <label>CONTACT NUMBER</label>
-      <input name="contact" placeholder="09xxxxxxxxx" inputmode="tel" required />
+      <input name="contact" id="contactInput" placeholder="09xxxxxxxxx" inputmode="numeric"
+             pattern="[0-9]{10,13}" maxlength="13" autocomplete="tel" required
+             title="Digits only, 10–13 numbers" />
+      <p class="hint">Numbers only (10–13 digits)</p>
     </div>
     <div class="field">
       <label>RENTAL DAYS</label>
@@ -100,6 +103,25 @@
 {% block scripts %}
 <script>
   if (window.lucide) lucide.createIcons();
+
+  const contactInput = document.getElementById('contactInput');
+  if (contactInput) {
+    contactInput.addEventListener('input', () => {
+      contactInput.value = contactInput.value.replace(/\D/g, '').slice(0, 13);
+    });
+    contactInput.addEventListener('keypress', (e) => {
+      if (e.key.length === 1 && !/[0-9]/.test(e.key)) e.preventDefault();
+    });
+    contactInput.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData('text') || '';
+      const digits = text.replace(/\D/g, '').slice(0, 13);
+      const start = contactInput.selectionStart || 0;
+      const end = contactInput.selectionEnd || 0;
+      const v = contactInput.value;
+      contactInput.value = (v.slice(0, start) + digits + v.slice(end)).replace(/\D/g, '').slice(0, 13);
+    });
+  }
 
   const method = document.getElementById('payMethod');
   const ref = document.getElementById('payRef');
