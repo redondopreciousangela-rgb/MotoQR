@@ -40,7 +40,7 @@
         <td>{{ r.date }}</td>
         <td>
           <form method="post" style="display:flex;flex-wrap:wrap;gap:6px">
-            <input type="hidden" name="index" value="{{ loop.index0 }}" />
+            <input type="hidden" name="rental_id" value="{{ r.id }}" />
             <button class="btn green filled" name="action" value="confirm" type="submit">Confirm</button>
             <button class="btn red" name="action" value="reject" type="submit">Reject</button>
           </form>
