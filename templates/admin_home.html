@@ -14,8 +14,9 @@
 </div>
 
 <div class="actions" style="margin-bottom:20px">
+  <a class="btn filled" href="{{ url_for('add_motorcycle') }}"><i data-lucide="plus"></i> Add Motorcycle</a>
   <a class="btn amber filled" href="{{ url_for('pending_payments') }}">Pending Payments</a>
-  <a class="btn filled" href="{{ url_for('all_rentals') }}">All Rentals</a>
+  <a class="btn" href="{{ url_for('all_rentals') }}">All Rentals</a>
   <a class="btn amber" href="{{ url_for('return_requests') }}">Return Requests</a>
   <a class="btn" href="{{ url_for('gps_tracker') }}" style="border-color:var(--magenta);color:var(--magenta)">GPS Tracker</a>
 </div>
@@ -39,4 +40,7 @@
     </tbody>
   </table>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>if (window.lucide) lucide.createIcons();</script>
 {% endblock %}

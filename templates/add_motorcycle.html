@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Add Motorcycle · MotoQR{% endblock %}
+{% block content %}
+<div class="page-head">
+  <a class="page-back" href="{{ url_for('admin_home') }}" aria-label="Back to fleet">
+    <i data-lucide="arrow-left"></i>
+  </a>
+  <div>
+    <div class="section-bar"><h2>ADD MOTORCYCLE</h2></div>
+    <p class="subtitle">Register a new unit to the fleet</p>
+  </div>
+</div>
+
+<div class="form-card" style="max-width:480px">
+  <form method="post" enctype="multipart/form-data">
+    <div class="field">
+      <label>UNIT ID <span class="req">*</span></label>
+      <input name="id" placeholder="M021" required pattern="[A-Za-z0-9\-]+" />
+      <p class="hint">Unique code, e.g. M021</p>
+    </div>
+    <div class="field">
+      <label>MODEL NAME <span class="req">*</span></label>
+      <input name="name" placeholder="Honda Click 160" required />
+    </div>
+    <div class="field">
+      <label>DAILY RATE (₱) <span class="req">*</span></label>
+      <input type="number" name="rate" min="1" step="1" placeholder="500" required />
+    </div>
+    <div class="field">
+      <label>PHOTO (optional)</label>
+      <input type="file" name="image" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" />
+      <p class="hint">JPG/PNG/WEBP. Served as unit ID image.</p>
+    </div>
+    <button class="btn filled block" type="submit">
+      <i data-lucide="plus"></i> Add to fleet
+    </button>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>if (window.lucide) lucide.createIcons();</script>
+{% endblock %}

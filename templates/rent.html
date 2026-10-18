@@ -1,8 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Rent {{ bike.name }} · MotoQR{% endblock %}
 {% block content %}
-<div class="section-bar"><h2>RENT MOTORCYCLE</h2></div>
-<p class="subtitle">Complete the form and submit payment for admin confirmation</p>
+<div class="page-head">
+  <a class="page-back" href="{{ url_for('client_home') }}">
+    <i data-lucide="arrow-left"></i>
+  </a>
+  <div>
+    <div class="section-bar"><h2>RENT MOTORCYCLE</h2></div>
+    <p class="subtitle">Complete the form and submit payment for admin confirmation</p>
+  </div>
+</div>
 
 <div class="rent-hero">
   <img src="{{ url_for('serve_image', filename=bike.id + '.jpg') }}" alt="{{ bike.name }}"
@@ -26,15 +33,19 @@
     </div>
     <div class="field">
       <label>VALID ID / DRIVER'S LICENSE <span class="req">*</span></label>
-      <p class="hint">Take a photo with your camera or upload from your gallery (JPG/PNG/PDF).</p>
+      <p class="hint">Capture a live photo with your camera, or upload an existing file (JPG/PNG/PDF).</p>
       <div class="id-actions">
-        <button type="button" class="btn filled" id="btnCamera">📷 Take photo</button>
-        <button type="button" class="btn" id="btnGallery">📁 Upload file</button>
+        <button type="button" class="btn filled" id="btnCamera">
+          <i data-lucide="camera"></i> Take photo
+        </button>
+        <button type="button" class="btn" id="btnGallery">
+          <i data-lucide="image"></i> Upload file
+        </button>
       </div>
-      <input type="file" name="id_document" id="idCamera"
-             accept="image/*" capture="environment" class="sr-only" />
       <input type="file" id="idGallery"
              accept="image/*,.pdf,image/jpeg,image/png,image/webp,application/pdf" class="sr-only" />
+      <input type="hidden" name="id_document_b64" id="idB64" value="" />
+      <input type="file" name="id_document" id="idFile" class="sr-only" />
       <div id="idPreview" class="id-preview" hidden></div>
       <p class="hint" id="idStatus">No ID selected yet.</p>
     </div>
@@ -46,17 +57,42 @@
         <option value="Card">Card</option>
       </select>
     </div>
-    <div class="field" id="refField">
+    <div class="field">
       <label>PAYMENT REFERENCE</label>
       <input name="payment_ref" id="payRef" placeholder="GCash ref or last 4 card digits" />
     </div>
     <button class="btn filled block" type="submit">SUBMIT PAYMENT →</button>
     <p style="margin-top:12px;text-align:center">
-      <a href="{{ url_for('client_home') }}">← Cancel</a>
+      <a href="{{ url_for('client_home') }}">Cancel</a>
     </p>
   </form>
 </div>
+
+<div class="cam-modal" id="camModal" hidden>
+  <div class="cam-sheet">
+    <div class="cam-head">
+      <strong>Capture ID photo</strong>
+      <button type="button" class="sidebar-close" id="camClose" aria-label="Close">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <video id="camVideo" playsinline autoplay muted></video>
+    <canvas id="camCanvas" hidden></canvas>
+    <div class="cam-actions">
+      <button type="button" class="btn" id="camCancel">Cancel</button>
+      <button type="button" class="btn filled" id="camSnap">
+        <i data-lucide="camera"></i> Capture
+      </button>
+    </div>
+    <p class="hint" id="camError" style="color:var(--red)" hidden></p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
 <script>
+  if (window.lucide) lucide.createIcons();
+
   const method = document.getElementById('payMethod');
   const ref = document.getElementById('payRef');
   function syncPay() {
@@ -71,46 +107,102 @@
   method.addEventListener('change', syncPay);
   syncPay();
 
-  const idCamera = document.getElementById('idCamera');
   const idGallery = document.getElementById('idGallery');
+  const idFile = document.getElementById('idFile');
+  const idB64 = document.getElementById('idB64');
   const preview = document.getElementById('idPreview');
   const status = document.getElementById('idStatus');
   const form = document.getElementById('rentForm');
 
-  document.getElementById('btnCamera').addEventListener('click', () => idCamera.click());
-  document.getElementById('btnGallery').addEventListener('click', () => idGallery.click());
-
-  function showPreview(input) {
+  function setPreviewFromBlob(blob, label) {
     preview.innerHTML = '';
     preview.hidden = true;
-    const f = input.files && input.files[0];
-    if (!f) {
-      status.textContent = 'No ID selected yet.';
-      return;
-    }
-    if (input === idGallery) {
-      const dt = new DataTransfer();
-      dt.items.add(f);
-      idCamera.files = dt.files;
-    }
-    status.textContent = 'Selected: ' + f.name;
-    if (f.type.startsWith('image/')) {
+    status.textContent = label || 'ID selected';
+    if (blob && blob.type && blob.type.startsWith('image/')) {
       const img = document.createElement('img');
-      img.src = URL.createObjectURL(f);
+      img.src = URL.createObjectURL(blob);
       img.alt = 'ID preview';
       preview.appendChild(img);
-      preview.hidden = false;
-    } else {
-      preview.textContent = f.name;
       preview.hidden = false;
     }
   }
 
-  idCamera.addEventListener('change', () => showPreview(idCamera));
-  idGallery.addEventListener('change', () => showPreview(idGallery));
+  function setFileInputFromBlob(blob, filename) {
+    const file = new File([blob], filename, { type: blob.type || 'image/jpeg' });
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    idFile.files = dt.files;
+    idB64.value = '';
+  }
+
+  document.getElementById('btnGallery').addEventListener('click', () => idGallery.click());
+  idGallery.addEventListener('change', () => {
+    const f = idGallery.files && idGallery.files[0];
+    if (!f) return;
+    const dt = new DataTransfer();
+    dt.items.add(f);
+    idFile.files = dt.files;
+    idB64.value = '';
+    setPreviewFromBlob(f, 'Selected: ' + f.name);
+  });
+
+  const camModal = document.getElementById('camModal');
+  const camVideo = document.getElementById('camVideo');
+  const camCanvas = document.getElementById('camCanvas');
+  const camError = document.getElementById('camError');
+  let camStream = null;
+
+  async function openCamera() {
+    camError.hidden = true;
+    camError.textContent = '';
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera not supported on this device/browser.');
+      }
+      camStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false,
+      });
+      camVideo.srcObject = camStream;
+      camModal.hidden = false;
+      if (window.lucide) lucide.createIcons();
+    } catch (err) {
+      camError.hidden = false;
+      camError.textContent = err.message || 'Unable to access camera. Check browser permissions.';
+      camModal.hidden = false;
+    }
+  }
+
+  function stopCamera() {
+    if (camStream) {
+      camStream.getTracks().forEach(t => t.stop());
+      camStream = null;
+    }
+    camVideo.srcObject = null;
+    camModal.hidden = true;
+  }
+
+  function snapPhoto() {
+    if (!camVideo.videoWidth) return;
+    camCanvas.width = camVideo.videoWidth;
+    camCanvas.height = camVideo.videoHeight;
+    const ctx = camCanvas.getContext('2d');
+    ctx.drawImage(camVideo, 0, 0);
+    camCanvas.toBlob((blob) => {
+      if (!blob) return;
+      setFileInputFromBlob(blob, 'id_capture.jpg');
+      setPreviewFromBlob(blob, 'Captured photo ready');
+      stopCamera();
+    }, 'image/jpeg', 0.92);
+  }
+
+  document.getElementById('btnCamera').addEventListener('click', openCamera);
+  document.getElementById('camClose').addEventListener('click', stopCamera);
+  document.getElementById('camCancel').addEventListener('click', stopCamera);
+  document.getElementById('camSnap').addEventListener('click', snapPhoto);
 
   form.addEventListener('submit', (e) => {
-    if (!idCamera.files || !idCamera.files.length) {
+    if ((!idFile.files || !idFile.files.length) && !idB64.value) {
       e.preventDefault();
       status.textContent = 'Please take a photo or upload your ID.';
       status.style.color = 'var(--amber)';

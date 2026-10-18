@@ -1,8 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Pending Payments · MotoQR{% endblock %}
 {% block content %}
-<div class="section-bar"><h2>PENDING PAYMENTS</h2></div>
-<p class="subtitle">Verify online payments or receive cash, then confirm</p>
+<div class="page-head">
+  <a class="page-back" href="{{ url_for('admin_home') }}">
+    <i data-lucide="arrow-left"></i>
+  </a>
+  <div>
+    <div class="section-bar"><h2>PENDING PAYMENTS</h2></div>
+    <p class="subtitle">Verify online payments or receive cash, then confirm</p>
+  </div>
+</div>
 
 {% if not pending %}
   <div class="empty">No pending payments right now.</div>
@@ -46,4 +53,7 @@
   </table>
 </div>
 {% endif %}
+{% endblock %}
+{% block scripts %}
+<script>if (window.lucide) lucide.createIcons();</script>
 {% endblock %}
