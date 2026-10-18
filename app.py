@@ -25,6 +25,7 @@ MOTORCYCLES_FILE = os.path.join(DATA_DIR, "motorcycles.json")
 RENTALS_FILE = os.path.join(DATA_DIR, "rentals.json")
 RETURNS_FILE = os.path.join(DATA_DIR, "return_requests.json")
 NOTIFICATIONS_FILE = os.path.join(DATA_DIR, "notifications.json")
+SUPPORT_FILE = os.path.join(DATA_DIR, "support_messages.json")
 CAPTURED_IDS_DIR = os.path.join(BASE_DIR, "captured_ids")
 
 LATE_FEE_PER_DAY = 100
@@ -158,6 +159,18 @@ def save_returns(returns):
 
 def save_notifications(notes):
     save_json(NOTIFICATIONS_FILE, notes)
+
+
+def get_support_messages():
+    return load_json(SUPPORT_FILE, [])
+
+
+def save_support_messages(messages):
+    save_json(SUPPORT_FILE, messages)
+
+
+def open_support_count():
+    return sum(1 for m in get_support_messages() if m.get("status") == "Open")
 
 
 def notify(username, title, message, ntype="info"):
@@ -705,12 +718,120 @@ def add_motorcycle():
     return render_template("add_motorcycle.html", user=current_user(), unread=unread_count(session["username"]))
 
 
+@app.route("/support", methods=["GET", "POST"])
+@login_required
+def customer_service():
+    if session.get("role") == "Admin":
+        return redirect(url_for("admin_support"))
+    messages = [m for m in get_support_messages() if m.get("username") == session["username"]]
+    messages.sort(key=lambda m: m.get("date", ""), reverse=True)
+    if request.method == "POST":
+        subject = request.form.get("subject", "").strip()
+        body = request.form.get("message", "").strip()
+        motorcycle = request.form.get("motorcycle", "").strip()
+        if not subject or not body:
+            flash("Please enter a subject and message.", "warning")
+            return render_template(
+                "support.html", user=current_user(), messages=messages,
+                active_rentals=[r for r in get_rentals() if r.get("username") == session["username"] and r.get("status") in ("Rented", "Overdue", "Pending Confirmation")],
+                unread=unread_count(session["username"]),
+            )
+        msgs = get_support_messages()
+        ticket = {
+            "id": f"CS{datetime.now().strftime('%Y%m%d%H%M%S')}{random.randint(10, 99)}",
+            "username": session["username"],
+            "subject": subject,
+            "message": body,
+            "motorcycle": motorcycle or "—",
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "status": "Open",
+            "admin_reply": "",
+            "replied_at": "",
+            "replied_by": "",
+        }
+        msgs.append(ticket)
+        save_support_messages(msgs)
+        notify_admins(
+            "New Customer Service Message",
+            f"From: {session['username']}\nSubject: {subject}\nUnit: {ticket['motorcycle']}\n\n{body}",
+            ntype="warning",
+        )
+        notify(
+            session["username"],
+            "Customer Service — Message Sent",
+            f"Your message was sent (Ticket {ticket['id']}).\nSubject: {subject}\nOur team will reply as soon as possible.",
+            ntype="info",
+        )
+        flash("Message sent to Customer Service. You will be notified when we reply.", "success")
+        return redirect(url_for("customer_service"))
+    active_rentals = [
+        r for r in get_rentals()
+        if r.get("username") == session["username"]
+        and r.get("status") in ("Rented", "Overdue", "Pending Confirmation")
+    ]
+    return render_template(
+        "support.html", user=current_user(), messages=messages,
+        active_rentals=active_rentals, unread=unread_count(session["username"]),
+    )
+
+
+@app.route("/admin/support", methods=["GET", "POST"])
+@admin_required
+def admin_support():
+    msgs = get_support_messages()
+    if request.method == "POST":
+        ticket_id = request.form.get("ticket_id", "").strip()
+        reply = request.form.get("reply", "").strip()
+        action = request.form.get("action", "reply")
+        ticket = next((m for m in msgs if m.get("id") == ticket_id), None)
+        if not ticket:
+            flash("Ticket not found.", "danger")
+            return redirect(url_for("admin_support"))
+        if action == "close":
+            ticket["status"] = "Closed"
+            save_support_messages(msgs)
+            notify(
+                ticket["username"],
+                "Customer Service — Ticket Closed",
+                f"Ticket {ticket_id} ({ticket.get('subject')}) was closed by support.",
+                ntype="info",
+            )
+            flash("Ticket closed.", "info")
+            return redirect(url_for("admin_support"))
+        if not reply:
+            flash("Please enter a reply.", "warning")
+            return redirect(url_for("admin_support"))
+        ticket["admin_reply"] = reply
+        ticket["replied_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        ticket["replied_by"] = session["username"]
+        ticket["status"] = "Replied"
+        save_support_messages(msgs)
+        notify(
+            ticket["username"],
+            "Customer Service — Reply Received",
+            f"Ticket {ticket_id}: {ticket.get('subject')}\n\nSupport reply:\n{reply}",
+            ntype="success",
+        )
+        flash("Reply sent. Client notified.", "success")
+        return redirect(url_for("admin_support"))
+    msgs_sorted = sorted(msgs, key=lambda m: m.get("date", ""), reverse=True)
+    return render_template(
+        "admin_support.html", user=current_user(), messages=msgs_sorted,
+        open_count=open_support_count(), unread=unread_count(session["username"]),
+    )
+
+
 ensure_dirs()
 if not os.path.exists(MOTORCYCLES_FILE):
     save_motorcycles(default_motorcycles())
 if not os.path.exists(USERS_FILE):
     save_users([{"username": "admin", "password": "1234", "role": "Admin"}])
-for f, default in [(RENTALS_FILE, []), (RETURNS_FILE, []), (NOTIFICATIONS_FILE, [])]:
+for f, default in [
+    (RENTALS_FILE, []),
+    (RETURNS_FILE, []),
+    (NOTIFICATIONS_FILE, []),
+    (SUPPORT_FILE, []),
+]:
     if not os.path.exists(f):
         save_json(f, default)
 
