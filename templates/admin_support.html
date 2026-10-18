@@ -7,47 +7,30 @@
   </a>
   <div>
     <div class="section-bar"><h2>CUSTOMER SERVICE</h2></div>
-    <p class="subtitle">Client messages and support replies · {{ open_count }} open</p>
+    <p class="subtitle">Live chats with clients · {{ open_count }} open</p>
   </div>
 </div>
 
-{% if not messages %}
-  <div class="empty">No customer service messages yet.</div>
+{% if not threads %}
+  <div class="empty">No customer service conversations yet.</div>
 {% else %}
-  {% for m in messages %}
-  <div class="form-card" style="margin-bottom:16px">
-    <div class="notif-title">{{ m.subject }}
-      <span class="pill {{ 'reserved' if m.status == 'Open' else ('available' if m.status == 'Replied' else '') }}" style="margin-left:8px">{{ m.status }}</span>
-    </div>
-    <div class="notif-date" style="margin:6px 0">
-      Ticket {{ m.id }} · {{ m.username }} · {{ m.date }}
-      {% if m.motorcycle and m.motorcycle != '—' %} · Unit: {{ m.motorcycle }}{% endif %}
-    </div>
-    <div class="notif-msg" style="margin-bottom:12px">{{ m.message }}</div>
-    {% if m.admin_reply %}
-    <div class="notif-msg" style="margin-bottom:12px;padding:10px;border-radius:10px;background:var(--bg);border:1px solid var(--border)">
-      <strong style="color:var(--cyan)">Your reply</strong>
-      {% if m.replied_at %}<span class="notif-date"> · {{ m.replied_at }}</span>{% endif %}<br/>
-      {{ m.admin_reply }}
-    </div>
-    {% endif %}
-    {% if m.status != 'Closed' %}
-    <form method="post">
-      <input type="hidden" name="ticket_id" value="{{ m.id }}" />
-      <div class="field">
-        <label>REPLY</label>
-        <textarea name="reply" rows="3" placeholder="Advise the client (roadside help, tow, swap unit, etc.)"></textarea>
+  <div class="chat-list-panel" style="max-width:720px">
+    {% for t in threads %}
+    <a class="chat-list-item" href="{{ url_for('admin_support_thread', ticket_id=t.id) }}">
+      <div class="chat-list-top">
+        <strong>{{ t.subject }}</strong>
+        <span class="pill {{ 'reserved' if t.status == 'Open' else '' }}">{{ t.status }}</span>
       </div>
-      <div class="actions">
-        <button class="btn filled" type="submit" name="action" value="reply">
-          <i data-lucide="send"></i> Send reply
-        </button>
-        <button class="btn" type="submit" name="action" value="close">Close ticket</button>
-      </div>
-    </form>
-    {% endif %}
+      <div class="chat-list-meta">{{ t.id }} · {{ t.username }} · {{ t.updated or t.date }}{% if t.motorcycle and t.motorcycle != '—' %} · {{ t.motorcycle }}{% endif %}</div>
+      {% set last = (t.messages or [])[-1] if t.messages else none %}
+      {% if last %}
+      <div class="chat-list-preview">{{ last.from }}: {{ last.text }}</div>
+      {% elif t.message %}
+      <div class="chat-list-preview">{{ t.message }}</div>
+      {% endif %}
+    </a>
+    {% endfor %}
   </div>
-  {% endfor %}
 {% endif %}
 {% endblock %}
 {% block scripts %}

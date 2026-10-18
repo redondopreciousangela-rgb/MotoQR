@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ ticket.subject }} · Support · MotoQR{% endblock %}
+{% block content %}
+<div class="page-head">
+  <a class="page-back" href="{{ url_for('admin_support') if is_admin else url_for('customer_service') }}" aria-label="Back">
+    <i data-lucide="arrow-left"></i>
+  </a>
+  <div>
+    <div class="section-bar"><h2>{{ ticket.subject }}</h2></div>
+    <p class="subtitle">
+      {{ ticket.id }}
+      {% if is_admin %} · {{ ticket.username }}{% endif %}
+      {% if ticket.motorcycle and ticket.motorcycle != '—' %} · {{ ticket.motorcycle }}{% endif %}
+      · <span class="pill {{ 'reserved' if ticket.status == 'Open' else '' }}">{{ ticket.status }}</span>
+    </p>
+  </div>
+</div>
+
+<div class="chat-shell">
+  <div class="chat-messages" id="chatMessages">
+    {% for m in ticket.messages or [] %}
+    <div class="chat-bubble {% if m.from == 'admin' %}chat-admin{% else %}chat-client{% endif %}">
+      <div class="chat-bubble-meta">
+        {% if m.from == 'admin' %}Support{% else %}{{ m.username or 'You' }}{% endif %}
+        · {{ m.date }}
+      </div>
+      <div class="chat-bubble-text">{{ m.text }}</div>
+    </div>
+    {% else %}
+    <div class="empty">No messages yet.</div>
+    {% endfor %}
+  </div>
+
+  {% if ticket.status != 'Closed' %}
+  <form method="post" class="chat-composer">
+    <textarea name="message" rows="2" placeholder="Type a message…" required autofocus></textarea>
+    <button class="btn filled" type="submit" name="action" value="reply" aria-label="Send">
+      <i data-lucide="send"></i>
+    </button>
+  </form>
+  {% else %}
+  <div class="chat-closed-banner">This conversation is closed.</div>
+  {% endif %}
+
+  {% if is_admin %}
+  <form method="post" class="chat-admin-actions">
+    {% if ticket.status != 'Closed' %}
+    <button class="btn" type="submit" name="action" value="close">Close conversation</button>
+    {% else %}
+    <button class="btn filled" type="submit" name="action" value="reopen">Reopen</button>
+    {% endif %}
+  </form>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  if (window.lucide) lucide.createIcons();
+  const box = document.getElementById('chatMessages');
+  if (box) box.scrollTop = box.scrollHeight;
+</script>
+{% endblock %}
