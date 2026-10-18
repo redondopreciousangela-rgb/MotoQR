@@ -52,7 +52,6 @@
       {% endif %}
       {% set st = bike.status|lower %}
       <span class="pill {{ st }}">{{ bike.status }}</span>
-      <a class="btn block" href="{{ url_for('motorcycle_status', bike_id=bike.id) }}">QR / Status</a>
       {% if bike.status == 'Available' %}
         <a class="btn filled block" href="{{ url_for('rent', bike_id=bike.id) }}">SELECT →</a>
       {% else %}
