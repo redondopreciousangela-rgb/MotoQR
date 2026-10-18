@@ -73,7 +73,6 @@ def register_routes(app):
         })
 
     @app.route("/motorcycle/<bike_id>/qr.png")
-    @admin_required
     def motorcycle_qr(bike_id):
         bike = next((b for b in get_motorcycles() if b.get("id") == bike_id), None)
         if not bike:
