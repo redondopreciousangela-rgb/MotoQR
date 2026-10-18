@@ -35,7 +35,7 @@
       {% else %}
         <a href="{{ url_for('client_home') }}">Browse</a>
         <a href="{{ url_for('my_rentals') }}">My Rentals</a>
-        <a href="{{ url_for('return_rent') }}">Return</a>
+        <a href="{{ url_for('return_unit') }}">Return</a>
         <a href="{{ url_for('customer_service') }}">Support</a>
       {% endif %}
       <a href="{{ url_for('notifications') }}" class="badge-link">
@@ -71,7 +71,7 @@
       {% else %}
         <a href="{{ url_for('client_home') }}"><i data-lucide="layout-grid"></i> Browse</a>
         <a href="{{ url_for('my_rentals') }}"><i data-lucide="clipboard-list"></i> My Rentals</a>
-        <a href="{{ url_for('return_rent') }}"><i data-lucide="undo-2"></i> Return</a>
+        <a href="{{ url_for('return_unit') }}"><i data-lucide="undo-2"></i> Return</a>
         <a href="{{ url_for('customer_service') }}"><i data-lucide="life-buoy"></i> Support</a>
       {% endif %}
       <a href="{{ url_for('notifications') }}">
