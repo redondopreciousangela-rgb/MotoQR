@@ -1,9 +1,10 @@
 """Extra routes registered onto the main Flask app."""
-from datetime import datetime
+from datetime import datetime, timedelta
+from io import BytesIO
 import os
 import random
 from flask import (
-    request, redirect, url_for, session, flash, jsonify, render_template
+    request, redirect, url_for, session, flash, jsonify, render_template, send_file, abort
 )
 from werkzeug.utils import secure_filename
 
@@ -19,6 +20,92 @@ def register_routes(app):
         check_overdue, gps_positions, CAPTURED_IDS_DIR, LATE_FEE_PER_DAY,
         get_users, save_users,
     )
+
+    def motorcycle_category(bike):
+        if bike.get("category"):
+            return bike["category"]
+        name = (bike.get("name") or "").lower()
+        if any(x in name for x in ("crf", "klx", "dirt", "wr250")):
+            return "Dirt Bike"
+        if any(x in name for x in ("ninja", "cbr", "r15", "400", "mt-15", "cb150r")):
+            return "Big Bike"
+        if any(x in name for x in ("click", "mio", "beat", "aerox", "adv", "nmax", "pcx", "burgman", "fazzio", "airblade")):
+            return "Scooter"
+        if any(x in name for x in ("raider", "sniper", "xrm", "rouser")):
+            return "Underbone"
+        return "Standard"
+
+    def motorcycle_is_new(bike):
+        created = bike.get("created_at")
+        if not created:
+            return False
+        try:
+            dt = datetime.fromisoformat(created)
+            return datetime.now() - dt <= timedelta(days=7)
+        except (TypeError, ValueError):
+            return False
+
+    @app.route("/motorcycle/<bike_id>")
+    def motorcycle_status(bike_id):
+        bike = next((b for b in get_motorcycles() if b.get("id") == bike_id), None)
+        if not bike:
+            abort(404)
+        return render_template(
+            "motorcycle_status.html", bike=bike,
+            category=motorcycle_category(bike), is_new=motorcycle_is_new(bike),
+            checked_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        )
+
+    @app.route("/api/motorcycle/<bike_id>")
+    def api_motorcycle_status(bike_id):
+        bike = next((b for b in get_motorcycles() if b.get("id") == bike_id), None)
+        if not bike:
+            return jsonify({"ok": False, "error": "not_found"}), 404
+        return jsonify({
+            "ok": True, "id": bike.get("id"), "name": bike.get("name"),
+            "status": bike.get("status", "Unknown"),
+            "category": motorcycle_category(bike),
+            "maintenance_status": bike.get("maintenance_status", "Up to date"),
+            "maintenance_notes": bike.get("maintenance_notes", ""),
+            "is_new": motorcycle_is_new(bike),
+            "checked_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        })
+
+    @app.route("/motorcycle/<bike_id>/qr.png")
+    @admin_required
+    def motorcycle_qr(bike_id):
+        bike = next((b for b in get_motorcycles() if b.get("id") == bike_id), None)
+        if not bike:
+            abort(404)
+        try:
+            import qrcode
+            target = request.url_root.rstrip("/") + url_for("motorcycle_status", bike_id=bike_id)
+            image = qrcode.make(target)
+            stream = BytesIO()
+            image.save(stream, format="PNG")
+            stream.seek(0)
+            return send_file(stream, mimetype="image/png", download_name=f"{bike_id}-qr.png")
+        except Exception:
+            flash("Could not generate QR code. Check that the qrcode package is installed.", "danger")
+            return redirect(url_for("admin_home"))
+
+    @app.route("/admin/motorcycle/<bike_id>/maintenance", methods=["POST"])
+    @admin_required
+    def update_motorcycle_maintenance(bike_id):
+        bikes = get_motorcycles()
+        bike = next((b for b in bikes if b.get("id") == bike_id), None)
+        if not bike:
+            abort(404)
+        valid = ("Up to date", "Due soon", "In maintenance", "Out of service")
+        state = request.form.get("maintenance_status", "Up to date")
+        if state not in valid:
+            state = "Up to date"
+        bike["maintenance_status"] = state
+        bike["maintenance_notes"] = request.form.get("maintenance_notes", "").strip()[:500]
+        bike["maintenance_updated"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        save_motorcycles(bikes)
+        flash(f"Maintenance details updated for {bike.get('name', bike_id)}.", "success")
+        return redirect(url_for("admin_home"))
 
     @app.route("/rent/<bike_id>", methods=["GET", "POST"])
     @login_required
@@ -198,9 +285,18 @@ def register_routes(app):
                 if any(b["id"] == mid for b in bikes):
                     flash("ID already exists.", "danger")
                 else:
+                    category = request.form.get("category", "Standard")
+                    if category not in ("Scooter", "Big Bike", "Dirt Bike", "Underbone", "Standard"):
+                        category = "Standard"
+                    maintenance_status = request.form.get("maintenance_status", "Up to date")
+                    if maintenance_status not in ("Up to date", "Due soon", "In maintenance", "Out of service"):
+                        maintenance_status = "Up to date"
                     bikes.append({
                         "id": mid, "name": name, "rate": rate,
                         "status": "Available", "image": f"image/{mid}.jpg",
+                        "category": category, "created_at": datetime.now().isoformat(timespec="seconds"),
+                        "maintenance_status": maintenance_status,
+                        "maintenance_notes": request.form.get("maintenance_notes", "").strip()[:500],
                     })
                     save_motorcycles(bikes)
                     flash(f"Added {name}.", "success")
