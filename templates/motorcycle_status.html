@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#070a12">
+  <title>{{ bike.name }} · MotoQR Status</title>
+  <style>
+    :root{color-scheme:dark;--bg:#070a12;--surface:#101827;--border:#22304a;--cyan:#00e5ff;--green:#00ffa3;--amber:#ffb020;--red:#ff3b5c;--text:#eaf0fa;--muted:#8394b0}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,sans-serif;min-height:100vh;display:grid;place-items:center;padding:20px}
+    main{width:min(680px,100%);border:1px solid var(--border);border-radius:20px;background:var(--surface);padding:clamp(20px,5vw,36px)}
+    .brand{letter-spacing:.15em;color:var(--cyan);font-weight:800;font-size:.85rem}.unit{color:var(--muted);font-size:.8rem;margin-top:24px}
+    h1{font-size:clamp(1.6rem,5vw,2.2rem);margin:4px 0 16px}.pill{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:5px 12px;font-weight:700;font-size:.85rem}
+    .status{color:var(--cyan)}.new{color:var(--green);border-color:var(--green)}.maintenance{margin-top:20px;padding:16px;border:1px solid var(--border);border-radius:12px}
+    dl{display:grid;grid-template-columns: minmax(120px, .8fr) 1.2fr;gap:10px;margin:20px 0}dt{color:var(--muted)}dd{margin:0;overflow-wrap:anywhere}
+    .notes{white-space:pre-wrap;overflow-wrap:anywhere}.foot{color:var(--muted);font-size:.8rem;margin-top:24px}
+  </style>
+</head>
+<body>
+<main>
+  <div class="brand">◆ MOTOQR · MOTORCYCLE STATUS</div>
+  <div class="unit">UNIT {{ bike.id }}</div>
+  <h1>{{ bike.name }}</h1>
+  <p><span class="pill status" id="bikeStatus">{{ bike.status }}</span>
+  <span class="pill new" id="newLabel" {% if not is_new %}hidden{% endif %}>New!</span></p>
+  <dl>
+    <dt>Motorcycle type</dt><dd id="bikeCategory">{{ category }}</dd>
+    <dt>Daily rental rate</dt><dd>₱{{ bike.rate }}</dd>
+    <dt>Maintenance status</dt><dd id="maintenanceStatus">{{ bike.maintenance_status|default('Up to date') }}</dd>
+    <dt>Last maintenance update</dt><dd id="maintenanceUpdated">{{ bike.maintenance_updated|default('Not recorded') }}</dd>
+  </dl>
+  <section class="maintenance">
+    <strong>Maintenance notes</strong>
+    <p class="notes" id="maintenanceNotes">{{ bike.maintenance_notes|default('No maintenance notes recorded yet.') }}</p>
+  </section>
+  <p class="foot">Status refreshes automatically every 5 seconds. Last checked: <span id="checkedAt">{{ checked_at }}</span>. MotoQR demonstration system.</p>
+</main>
+<script>
+const api={{ url_for('api_motorcycle_status', bike_id=bike.id)|tojson }};
+async function refreshStatus(){
+  try{
+    const response=await fetch(api,{cache:'no-store'});
+    if(!response.ok)return;
+    const d=await response.json();if(!d.ok)return;
+    document.getElementById('bikeStatus').textContent=d.status;
+    document.getElementById('bikeCategory').textContent=d.category;
+    document.getElementById('maintenanceStatus').textContent=d.maintenance_status||'Up to date';
+    document.getElementById('maintenanceNotes').textContent=d.maintenance_notes||'No maintenance notes recorded yet.';
+    document.getElementById('maintenanceUpdated').textContent=d.maintenance_updated||'Not recorded';
+    document.getElementById('checkedAt').textContent=d.checked_at;
+    document.getElementById('newLabel').hidden=!d.is_new;
+  }catch(e){}
+}
+setInterval(refreshStatus,5000);
+</script>
+</body>
+</html>
