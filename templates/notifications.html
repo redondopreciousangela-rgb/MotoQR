@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Alerts · MotoQR{% endblock %}
+{% block content %}
+<div class="section-bar"><h2>NOTIFICATIONS</h2></div>
+<p class="subtitle">In-app alerts for your account</p>
+
+{% if not items %}
+  <div class="empty">No notifications yet.</div>
+{% else %}
+  {% for n in items %}
+  <div class="notif {{ n.type or 'info' }}">
+    <div class="notif-title">{{ n.title }}</div>
+    <div class="notif-date">{{ n.date }}</div>
+    <div class="notif-msg">{{ n.message }}</div>
+  </div>
+  {% endfor %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Return · MotoQR{% endblock %}
+{% block content %}
+<div class="section-bar"><h2>RETURN RENT</h2></div>
+<p class="subtitle">Submit a return request for admin approval</p>
+
+<div class="form-card">
+  <form method="post">
+    <div class="field">
+      <label>SELECT YOUR MOTORCYCLE</label>
+      <select name="motorcycle" required>
+        <option value="">— choose —</option>
+        {% for r in active %}
+          <option value="{{ r.motorcycle }}">{{ r.motorcycle }} ({{ r.status }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label>RETURN MESSAGE</label>
+      <textarea name="message" required placeholder="Condition notes, pickup location, etc."></textarea>
+    </div>
+    <button class="btn amber filled block" type="submit">SEND RETURN REQUEST</button>
+  </form>
+</div>
+{% endblock %}

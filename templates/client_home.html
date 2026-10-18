@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Browse · MotoQR{% endblock %}
+{% block content %}
+<div class="section-bar"><h2>AVAILABLE MOTORCYCLES</h2></div>
+<p class="subtitle">Select a unit and complete the rental form</p>
+
+<div class="stats">
+  <div class="stat green"><div class="label">AVAILABLE</div><div class="value">{{ available }}</div></div>
+  <div class="stat amber"><div class="label">RESERVED</div><div class="value">{{ reserved }}</div></div>
+  <div class="stat red"><div class="label">RENTED</div><div class="value">{{ rented }}</div></div>
+</div>
+
+<div class="grid">
+  {% for bike in bikes %}
+  <div class="card">
+    <img src="{{ url_for('serve_image', filename=bike.id + '.jpg') }}" alt="{{ bike.name }}"
+         onerror="this.style.opacity=0.3" />
+    <div class="card-body">
+      <div class="card-id">{{ bike.id }}</div>
+      <div class="card-name">{{ bike.name }}</div>
+      <div class="card-rate">₱{{ bike.rate }} / day</div>
+      {% set st = bike.status|lower %}
+      <span class="pill {{ st }}">{{ bike.status }}</span>
+      {% if bike.status == 'Available' %}
+        <a class="btn filled block" href="{{ url_for('rent', bike_id=bike.id) }}">SELECT →</a>
+      {% else %}
+        <button class="btn block disabled" disabled>{{ bike.status|upper }}</button>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
