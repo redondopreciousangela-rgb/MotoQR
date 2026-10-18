@@ -27,6 +27,24 @@
       <input type="number" name="rate" min="1" step="1" placeholder="500" required />
     </div>
     <div class="field">
+      <label>MOTORCYCLE TYPE</label>
+      <select name="category">
+        <option>Scooter</option><option>Big Bike</option><option>Dirt Bike</option>
+        <option>Underbone</option><option selected>Standard</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>MAINTENANCE STATUS</label>
+      <select name="maintenance_status">
+        <option>Up to date</option><option>Due soon</option>
+        <option>In maintenance</option><option>Out of service</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>MAINTENANCE NOTES</label>
+      <textarea name="maintenance_notes" rows="3" maxlength="500" placeholder="Last service, next oil change, inspection notes…"></textarea>
+    </div>
+    <div class="field">
       <label>PHOTO (optional)</label>
       <input type="file" name="image" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" />
       <p class="hint">JPG/PNG/WEBP. Served as unit ID image.</p>
