@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}GPS Tracker · MotoQR{% endblock %}
+{% block content %}
+<div class="section-bar"><h2>REAL-TIME GPS TRACKER</h2></div>
+<p class="subtitle">Simulated live positions for active rentals (demo mode)</p>
+
+<div class="gps-layout">
+  <div class="gps-list" id="gpsList">
+    {% if not units %}
+      <div class="empty">No active tracked units</div>
+    {% else %}
+      {% for u in units %}
+      <div class="gps-item">
+        <strong>{{ u.id }}</strong> · {{ u.name }}<br />
+        {{ u.lat }}, {{ u.lng }} · {{ u.updated }}<br />
+        Rider: {{ u.username }} · {{ u.status }}
+      </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+  <div class="gps-map">
+    <canvas id="gpsCanvas"></canvas>
+  </div>
+</div>
+<p style="color:var(--dim);font-size:0.8rem;margin-top:10px" id="gpsStatus">Simulation · updates every 2s</p>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const canvas = document.getElementById('gpsCanvas');
+const ctx = canvas.getContext('2d');
+const listEl = document.getElementById('gpsList');
+const statusEl = document.getElementById('gpsStatus');
+
+function resize() {
+  const parent = canvas.parentElement;
+  canvas.width = parent.clientWidth;
+  canvas.height = Math.max(360, parent.clientHeight);
+}
+window.addEventListener('resize', resize);
+resize();
+
+function latlngToXY(lat, lng, w, h) {
+  const minLat = 14.45, maxLat = 14.75, minLng = 120.90, maxLng = 121.10;
+  const x = (lng - minLng) / (maxLng - minLng) * (w - 40) + 20;
+  const y = (maxLat - lat) / (maxLat - minLat) * (h - 40) + 20;
+  return [x, y];
+}
+
+function draw(units) {
+  const w = canvas.width, h = canvas.height;
+  ctx.fillStyle = '#0b1220';
+  ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = '#152038';
+  for (let i = 0; i < w; i += 40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,h); ctx.stroke(); }
+  for (let j = 0; j < h; j += 40) { ctx.beginPath(); ctx.moveTo(0,j); ctx.lineTo(w,j); ctx.stroke(); }
+  ctx.fillStyle = '#00e5ff';
+  ctx.font = '12px Segoe UI';
+  ctx.fillText('N', 12, 18);
+  ctx.fillStyle = '#4a5878';
+  ctx.fillText('METRO MANILA · SIMULATED', w/2 - 80, h - 12);
+
+  if (!units.length) {
+    ctx.fillStyle = '#8394b0';
+    ctx.fillText('No active rentals to track', w/2 - 80, h/2);
+    return;
+  }
+  units.forEach(u => {
+    const [x, y] = latlngToXY(u.lat, u.lng, w, h);
+    ctx.beginPath();
+    ctx.arc(x, y, 8, 0, Math.PI * 2);
+    ctx.fillStyle = u.status === 'Overdue' ? '#ff3b5c' : '#00e5ff';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.stroke();
+    ctx.fillStyle = '#eaf0fa';
+    ctx.font = 'bold 11px Segoe UI';
+    ctx.fillText((u.id || '').slice(0, 4), x - 12, y - 12);
+  });
+}
+
+async function refresh() {
+  try {
+    const res = await fetch('{{ url_for("api_gps") }}');
+    const units = await res.json();
+    draw(units);
+    if (!units.length) {
+      listEl.innerHTML = '<div class="empty">No active tracked units</div>';
+    } else {
+      listEl.innerHTML = units.map(u => `
+        <div class="gps-item">
+          <strong>${u.id}</strong> · ${u.name}<br/>
+          ${u.lat}, ${u.lng} · ${u.updated}<br/>
+          Rider: ${u.username} · ${u.status}
+        </div>`).join('');
+    }
+    statusEl.textContent = `Simulation · ${units.length} unit(s) · ${new Date().toLocaleTimeString()}`;
+  } catch (e) {
+    statusEl.textContent = 'Failed to refresh GPS data';
+  }
+}
+refresh();
+setInterval(refresh, 2000);
+</script>
+{% endblock %}

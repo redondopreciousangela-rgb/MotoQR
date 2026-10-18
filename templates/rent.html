@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Rent {{ bike.name }} · MotoQR{% endblock %}
+{% block content %}
+<div class="section-bar"><h2>RENT MOTORCYCLE</h2></div>
+<p class="subtitle">Complete the form and submit payment for admin confirmation</p>
+
+<div class="rent-hero">
+  <img src="{{ url_for('serve_image', filename=bike.id + '.jpg') }}" alt="{{ bike.name }}" />
+  <div>
+    <div class="card-id">{{ bike.id }}</div>
+    <h2 style="margin:4px 0">{{ bike.name }}</h2>
+    <div class="card-rate" style="font-size:1.2rem">₱{{ bike.rate }} / day</div>
+  </div>
+</div>
+
+<div class="form-card">
+  <form method="post">
+    <div class="field">
+      <label>CONTACT NUMBER</label>
+      <input name="contact" placeholder="09xxxxxxxxx" required />
+    </div>
+    <div class="field">
+      <label>RENTAL DAYS</label>
+      <input type="number" name="days" min="1" value="1" required />
+    </div>
+    <div class="field">
+      <label>PAYMENT METHOD</label>
+      <select name="payment_method" id="payMethod">
+        <option value="Cash">Cash (pay at counter)</option>
+        <option value="GCash">GCash</option>
+        <option value="Card">Card</option>
+      </select>
+    </div>
+    <div class="field" id="refField">
+      <label>PAYMENT REFERENCE</label>
+      <input name="payment_ref" id="payRef" placeholder="GCash ref or last 4 card digits" />
+    </div>
+    <button class="btn filled block" type="submit">SUBMIT PAYMENT →</button>
+    <p style="margin-top:12px;text-align:center">
+      <a href="{{ url_for('client_home') }}">← Cancel</a>
+    </p>
+  </form>
+</div>
+<script>
+  const method = document.getElementById('payMethod');
+  const ref = document.getElementById('payRef');
+  function sync() {
+    if (method.value === 'Cash') {
+      ref.required = false;
+      ref.placeholder = 'Not required for cash';
+    } else {
+      ref.required = true;
+      ref.placeholder = method.value === 'GCash' ? 'GCash reference number' : 'Last 4 digits / card ref';
+    }
+  }
+  method.addEventListener('change', sync);
+  sync();
+</script>
+{% endblock %}
