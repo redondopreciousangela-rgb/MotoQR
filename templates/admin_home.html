@@ -34,11 +34,12 @@
         <td>{{ b.name }}</td>
         <td>₱{{ b.rate }}</td>
         <td class="{% if b.status == 'Available' %}status-rented{% elif b.status == 'Reserved' %}status-pending{% else %}status-overdue{% endif %}">
-          {{ b.status }}{% if b.created_at %} <span class="pill reserved">New!</span>{% endif %}
+          {{ b.status }}<span class="pill reserved fleet-new-label" data-created="{{ b.created_at|default('') }}" hidden>New!</span>
         </td>
         <td>
           <a class="btn" href="{{ url_for('motorcycle_status', bike_id=b.id) }}">Public status</a>
           <a href="{{ url_for('motorcycle_qr', bike_id=b.id) }}" target="_blank" rel="noopener">QR PNG</a>
+          <div><img src="{{ url_for('motorcycle_qr', bike_id=b.id) }}" alt="QR code for {{ b.name }}" width="72" height="72" loading="lazy" style="background:white;padding:4px;border-radius:6px" /></div>
         </td>
         <td style="min-width:220px">
           <form method="post" action="{{ url_for('update_motorcycle_maintenance', bike_id=b.id) }}">
@@ -58,5 +59,11 @@
 </div>
 {% endblock %}
 {% block scripts %}
-<script>if (window.lucide) lucide.createIcons();</script>
+<script>
+if (window.lucide) lucide.createIcons();
+document.querySelectorAll('.fleet-new-label[data-created]').forEach(label => {
+  const created = Date.parse(label.dataset.created || '');
+  label.hidden = !(Number.isFinite(created) && Date.now() - created <= 7 * 24 * 60 * 60 * 1000);
+});
+</script>
 {% endblock %}
