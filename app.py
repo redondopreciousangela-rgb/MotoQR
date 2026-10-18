@@ -443,6 +443,15 @@ def admin_home():
     )
 
 
+# Register remaining routes (rent, support, GPS, payments, returns)
+try:
+    from motoqr_routes import register_routes
+    register_routes(app)
+except Exception as _route_err:
+    # Keep core app alive even if extra routes fail to load
+    print("WARNING: motoqr_routes failed:", _route_err)
+
+
 ensure_dirs()
 if not os.path.exists(MOTORCYCLES_FILE):
     save_motorcycles(default_motorcycles())
