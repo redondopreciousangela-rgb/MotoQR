@@ -447,7 +447,13 @@ def register_routes(app):
         if not ticket.get("messages"):
             ticket["messages"] = []
         if request.method == "GET":
-            contact = ticket.get("contact") or client_contact(ticket.get("username", "")) or "—"
+            # Older support tickets may store an em dash as a placeholder.
+            # Treat it as missing so the phone number is recovered from the
+            # user's rental record instead of being overwritten by the username.
+            contact = ticket.get("contact")
+            if not contact or str(contact).strip() in ("—", "-", "N/A"):
+                contact = client_contact(ticket.get("username", ""))
+            contact = contact or "—"
             return jsonify({
                 "ok": True, "id": ticket["id"], "status": ticket.get("status", "Open"),
                 "subject": ticket.get("subject", ""), "username": ticket.get("username", ""),
