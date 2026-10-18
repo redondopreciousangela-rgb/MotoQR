@@ -25,7 +25,7 @@
 <div class="table-wrap">
   <table>
     <thead>
-      <tr><th>ID</th><th>Motorcycle</th><th>Rate</th><th>Status</th></tr>
+      <tr><th>ID</th><th>Motorcycle</th><th>Rate</th><th>Status</th><th>QR / Status</th><th>Maintenance</th></tr>
     </thead>
     <tbody>
       {% for b in bikes %}
@@ -34,7 +34,22 @@
         <td>{{ b.name }}</td>
         <td>₱{{ b.rate }}</td>
         <td class="{% if b.status == 'Available' %}status-rented{% elif b.status == 'Reserved' %}status-pending{% else %}status-overdue{% endif %}">
-          {{ b.status }}
+          {{ b.status }}{% if b.created_at %} <span class="pill reserved">New!</span>{% endif %}
+        </td>
+        <td>
+          <a class="btn" href="{{ url_for('motorcycle_status', bike_id=b.id) }}">Public status</a>
+          <a href="{{ url_for('motorcycle_qr', bike_id=b.id) }}" target="_blank" rel="noopener">QR PNG</a>
+        </td>
+        <td style="min-width:220px">
+          <form method="post" action="{{ url_for('update_motorcycle_maintenance', bike_id=b.id) }}">
+            <select name="maintenance_status" aria-label="Maintenance status">
+              {% for state in ['Up to date', 'Due soon', 'In maintenance', 'Out of service'] %}
+              <option value="{{ state }}" {% if b.maintenance_status|default('Up to date') == state %}selected{% endif %}>{{ state }}</option>
+              {% endfor %}
+            </select>
+            <input name="maintenance_notes" maxlength="500" placeholder="Maintenance notes" value="{{ b.maintenance_notes|default('') }}" />
+            <button class="btn" type="submit">Save</button>
+          </form>
         </td>
       </tr>
       {% endfor %}
