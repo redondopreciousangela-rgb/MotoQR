@@ -250,19 +250,26 @@ def register_routes(app):
                 bikes = get_motorcycles()
                 bike = next((b for b in bikes if b["id"] == rental.get("motorcycle_id")), None)
                 if action == "confirm":
-                    rental["status"] = "Rented"
-                    if bike:
-                        bike["status"] = "Rented"
-                    start_gps(rental.get("motorcycle_id"), rental.get("motorcycle"),
-                              rental.get("username"))
-                    notify(rental["username"], "Payment Confirmed",
-                           f"Your rental of {rental['motorcycle']} is confirmed. Enjoy the ride!",
-                           ntype="success")
-                    flash("Rental confirmed.", "success")
+                    if bike and bike.get("maintenance_status") in ("In maintenance", "Out of service"):
+                        flash("Cannot confirm this rental: the motorcycle is unavailable for maintenance.", "warning")
+                    else:
+                        rental["status"] = "Rented"
+                        if bike:
+                            bike["status"] = "Rented"
+                        start_gps(rental.get("motorcycle_id"), rental.get("motorcycle"),
+                                  rental.get("username"))
+                        notify(rental["username"], "Payment Confirmed",
+                               f"Your rental of {rental['motorcycle']} is confirmed. Enjoy the ride!",
+                               ntype="success")
+                        flash("Rental confirmed.", "success")
                 elif action == "reject":
                     rental["status"] = "Cancelled"
                     if bike:
-                        bike["status"] = "Available"
+                        bike["status"] = (
+                            bike.get("maintenance_status")
+                            if bike.get("maintenance_status") in ("In maintenance", "Out of service")
+                            else "Available"
+                        )
                     notify(rental["username"], "Rental Rejected",
                            f"Your rental of {rental['motorcycle']} was not approved.",
                            ntype="danger")
@@ -391,7 +398,11 @@ def register_routes(app):
                     bikes = get_motorcycles()
                     bike = next((b for b in bikes if b["id"] == rental.get("motorcycle_id")), None)
                     if bike:
-                        bike["status"] = "Available"
+                        bike["status"] = (
+                            bike.get("maintenance_status")
+                            if bike.get("maintenance_status") in ("In maintenance", "Out of service")
+                            else "Available"
+                        )
                     stop_gps(rental.get("motorcycle_id"))
                     save_motorcycles(bikes)
                     save_rentals(rentals)
