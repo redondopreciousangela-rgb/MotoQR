@@ -2,7 +2,7 @@
 {% block title %}Pending Payments · MotoQR{% endblock %}
 {% block content %}
 <div class="page-head">
-  <a class="page-back" href="{{ url_for('admin_home') }}">
+  <a class="page-back" href="{{ url_for('admin_home') }}" aria-label="Back to dashboard">
     <i data-lucide="arrow-left"></i>
   </a>
   <div>
@@ -35,9 +35,7 @@
         <td>
           {% if r.id_document %}
             <a href="{{ url_for('serve_upload', filename=r.id_document) }}" target="_blank" rel="noopener">View ID</a>
-          {% else %}
-            —
-          {% endif %}
+          {% else %}—{% endif %}
         </td>
         <td>{{ r.date }}</td>
         <td>

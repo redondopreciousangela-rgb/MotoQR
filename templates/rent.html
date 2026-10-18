@@ -2,7 +2,7 @@
 {% block title %}Rent {{ bike.name }} · MotoQR{% endblock %}
 {% block content %}
 <div class="page-head">
-  <a class="page-back" href="{{ url_for('client_home') }}">
+  <a class="page-back" href="{{ url_for('client_home') }}" aria-label="Back">
     <i data-lucide="arrow-left"></i>
   </a>
   <div>
@@ -33,7 +33,7 @@
     </div>
     <div class="field">
       <label>VALID ID / DRIVER'S LICENSE <span class="req">*</span></label>
-      <p class="hint">Capture a live photo with your camera, or upload an existing file (JPG/PNG/PDF).</p>
+      <p class="hint">Capture a live photo (front or back camera), or upload a file (JPG/PNG/PDF).</p>
       <div class="id-actions">
         <button type="button" class="btn filled" id="btnCamera">
           <i data-lucide="camera"></i> Take photo
@@ -74,6 +74,14 @@
       <strong>Capture ID photo</strong>
       <button type="button" class="sidebar-close" id="camClose" aria-label="Close">
         <i data-lucide="x"></i>
+      </button>
+    </div>
+    <div class="cam-switch">
+      <button type="button" class="btn active" id="camBack" data-facing="environment">
+        <i data-lucide="camera"></i> Back
+      </button>
+      <button type="button" class="btn" id="camFront" data-facing="user">
+        <i data-lucide="user"></i> Front
       </button>
     </div>
     <video id="camVideo" playsinline autoplay muted></video>
@@ -150,27 +158,44 @@
   const camVideo = document.getElementById('camVideo');
   const camCanvas = document.getElementById('camCanvas');
   const camError = document.getElementById('camError');
+  const camBackBtn = document.getElementById('camBack');
+  const camFrontBtn = document.getElementById('camFront');
   let camStream = null;
+  let facingMode = 'environment';
 
-  async function openCamera() {
+  function setFacingUI() {
+    camBackBtn.classList.toggle('active', facingMode === 'environment');
+    camFrontBtn.classList.toggle('active', facingMode === 'user');
+  }
+
+  async function startStream() {
     camError.hidden = true;
     camError.textContent = '';
+    if (camStream) {
+      camStream.getTracks().forEach(t => t.stop());
+      camStream = null;
+    }
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('Camera not supported on this device/browser.');
       }
       camStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' } },
+        video: { facingMode: { ideal: facingMode } },
         audio: false,
       });
       camVideo.srcObject = camStream;
-      camModal.hidden = false;
-      if (window.lucide) lucide.createIcons();
+      await camVideo.play().catch(() => {});
     } catch (err) {
       camError.hidden = false;
       camError.textContent = err.message || 'Unable to access camera. Check browser permissions.';
-      camModal.hidden = false;
     }
+  }
+
+  async function openCamera() {
+    camModal.hidden = false;
+    setFacingUI();
+    if (window.lucide) lucide.createIcons();
+    await startStream();
   }
 
   function stopCamera() {
@@ -183,10 +208,18 @@
   }
 
   function snapPhoto() {
-    if (!camVideo.videoWidth) return;
+    if (!camVideo.videoWidth) {
+      camError.hidden = false;
+      camError.textContent = 'Camera is not ready yet. Wait a moment and try again.';
+      return;
+    }
     camCanvas.width = camVideo.videoWidth;
     camCanvas.height = camVideo.videoHeight;
     const ctx = camCanvas.getContext('2d');
+    if (facingMode === 'user') {
+      ctx.translate(camCanvas.width, 0);
+      ctx.scale(-1, 1);
+    }
     ctx.drawImage(camVideo, 0, 0);
     camCanvas.toBlob((blob) => {
       if (!blob) return;
@@ -195,6 +228,19 @@
       stopCamera();
     }, 'image/jpeg', 0.92);
   }
+
+  camBackBtn.addEventListener('click', async () => {
+    if (facingMode === 'environment') return;
+    facingMode = 'environment';
+    setFacingUI();
+    await startStream();
+  });
+  camFrontBtn.addEventListener('click', async () => {
+    if (facingMode === 'user') return;
+    facingMode = 'user';
+    setFacingUI();
+    await startStream();
+  });
 
   document.getElementById('btnCamera').addEventListener('click', openCamera);
   document.getElementById('camClose').addEventListener('click', stopCamera);
