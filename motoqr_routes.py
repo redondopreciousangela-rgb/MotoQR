@@ -67,6 +67,7 @@ def register_routes(app):
             "category": motorcycle_category(bike),
             "maintenance_status": bike.get("maintenance_status", "Up to date"),
             "maintenance_notes": bike.get("maintenance_notes", ""),
+            "maintenance_updated": bike.get("maintenance_updated", "Not recorded"),
             "is_new": motorcycle_is_new(bike),
             "checked_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         })
