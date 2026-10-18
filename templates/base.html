@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#070a12" />
   <title>{% block title %}MotoQR{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 </head>
@@ -16,7 +17,10 @@
         <div class="brand-sub">{{ user.username }} · {{ user.role }}</div>
       </div>
     </div>
-    <nav class="nav">
+    <button class="nav-toggle" id="navToggle" aria-label="Menu" type="button">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="nav" id="mainNav">
       {% if user.role == 'Admin' %}
         <a href="{{ url_for('admin_home') }}">Fleet</a>
         <a href="{{ url_for('pending_payments') }}">Payments</a>
@@ -37,20 +41,53 @@
   </header>
   {% endif %}
 
-  <main class="container">
+  <div class="toast-stack" id="toastStack" aria-live="polite">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
-        <div class="flash-wrap">
-          {% for category, message in messages %}
-            <div class="flash flash-{{ category }}">{{ message }}</div>
-          {% endfor %}
-        </div>
+        {% for category, message in messages %}
+          <div class="toast toast-{{ category }}" role="status">
+            <span class="toast-msg">{{ message }}</span>
+            <button type="button" class="toast-close" aria-label="Dismiss">&times;</button>
+          </div>
+        {% endfor %}
       {% endif %}
     {% endwith %}
+  </div>
+
+  <main class="container">
     {% block content %}{% endblock %}
   </main>
 
   <footer class="footer">MotoQR · Motorcycle Rental System</footer>
+  <script>
+    (function () {
+      const btn = document.getElementById('navToggle');
+      const nav = document.getElementById('mainNav');
+      if (btn && nav) {
+        btn.addEventListener('click', () => {
+          nav.classList.toggle('open');
+          btn.classList.toggle('open');
+        });
+        nav.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+          nav.classList.remove('open');
+          btn.classList.remove('open');
+        }));
+      }
+    })();
+    (function () {
+      const stack = document.getElementById('toastStack');
+      if (!stack) return;
+      stack.querySelectorAll('.toast').forEach(toast => {
+        const close = () => {
+          toast.classList.add('toast-out');
+          setTimeout(() => toast.remove(), 280);
+        };
+        const btn = toast.querySelector('.toast-close');
+        if (btn) btn.addEventListener('click', close);
+        setTimeout(close, 3500);
+      });
+    })();
+  </script>
   {% block scripts %}{% endblock %}
 </body>
 </html>
