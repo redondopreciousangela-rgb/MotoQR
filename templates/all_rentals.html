@@ -1,25 +1,25 @@
 {% extends "base.html" %}
-{% block title %}All Rentals · MotoQR{% endblock %}
+{% block title %}Active Rentals · MotoQR{% endblock %}
 {% block content %}
 <div class="page-head">
   <a class="page-back" href="{{ url_for('admin_home') }}" aria-label="Back to dashboard">
     <i data-lucide="arrow-left"></i>
   </a>
   <div>
-    <div class="section-bar"><h2>ALL RENTALS</h2></div>
-    <p class="subtitle">Complete rental history</p>
+    <div class="section-bar"><h2>ACTIVE RENTALS</h2></div>
+    <p class="subtitle">Currently rented and overdue motorcycles · payment review is handled under Payments</p>
   </div>
 </div>
 
 {% if not rentals %}
-  <div class="empty">No rentals recorded yet.</div>
+  <div class="empty">No active rentals at the moment.</div>
 {% else %}
 <div class="table-wrap">
   <table>
     <thead>
       <tr>
         <th>Client</th><th>Motorcycle</th><th>Days</th><th>Total</th>
-        <th>Late Fee</th><th>Payment</th><th>Status</th><th>Date</th><th>Action</th>
+        <th>Late Fee</th><th>Payment</th><th>Status</th><th>Date</th>
       </tr>
     </thead>
     <tbody>
@@ -33,15 +33,6 @@
         <td>{{ r.payment_method }}</td>
         <td class="{% if r.status == 'Overdue' %}status-overdue{% elif r.status == 'Pending Confirmation' %}status-pending{% else %}status-rented{% endif %}">{{ r.status }}</td>
         <td>{{ r.date }}</td>
-        <td>
-          {% if r.status == 'Pending Confirmation' %}
-          <form method="post" action="{{ url_for('pending_payments') }}" style="display:flex;flex-wrap:wrap;gap:6px;min-width:150px">
-            <input type="hidden" name="rental_id" value="{{ r.id }}">
-            <button class="btn green filled" name="action" value="confirm" type="submit">Confirm</button>
-            <button class="btn red" name="action" value="reject" type="submit">Reject</button>
-          </form>
-          {% else %}—{% endif %}
-        </td>
       </tr>
       {% endfor %}
     </tbody>
