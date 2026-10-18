@@ -2,23 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#070a12" />
   <title>Sign In · MotoQR</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 </head>
 <body>
+  <div class="toast-stack" id="toastStack" aria-live="polite">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="toast toast-{{ category }}" role="status">
+            <span class="toast-msg">{{ message }}</span>
+            <button type="button" class="toast-close" aria-label="Dismiss">&times;</button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
   <div class="auth-wrap">
     <div class="auth-card">
       <div style="color:var(--cyan);font-size:1.4rem;margin-bottom:6px">◆</div>
       <h1>SIGN IN</h1>
       <p class="subtitle">MotoQR · Motorcycle Rental System</p>
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-            <div class="flash flash-{{ category }}">{{ message }}</div>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
       <form method="post">
         <div class="field">
           <label>USERNAME</label>
@@ -33,7 +39,18 @@
       <p style="margin-top:18px;text-align:center;color:var(--muted);font-size:0.9rem">
         No account? <a href="{{ url_for('register') }}">Create one</a>
       </p>
+      <p style="margin-top:10px;text-align:center;color:var(--dim);font-size:0.75rem">
+        Demo admin: admin / 1234
+      </p>
     </div>
   </div>
+  <script>
+    document.querySelectorAll('.toast').forEach(toast => {
+      const close = () => { toast.classList.add('toast-out'); setTimeout(() => toast.remove(), 280); };
+      const btn = toast.querySelector('.toast-close');
+      if (btn) btn.addEventListener('click', close);
+      setTimeout(close, 3500);
+    });
+  </script>
 </body>
 </html>
