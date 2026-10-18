@@ -120,7 +120,7 @@
         updateStatus(data.status);
       }
       const title = document.getElementById('chatTitle');
-      if (title) title.textContent = (data.contact && data.contact !== '—') ? data.contact : (data.username || 'Customer');
+      if (title && data.contact && !['—', '-', 'N/A'].includes(String(data.contact).trim())) title.textContent = data.contact;
       const unit = document.getElementById('chatUnit');
       if (unit && data.motorcycle && data.motorcycle !== '—') unit.textContent = data.motorcycle;
     } catch (e) {}
