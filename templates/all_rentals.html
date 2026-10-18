@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}All Rentals · MotoQR{% endblock %}
+{% block content %}
+<div class="section-bar"><h2>ALL RENTALS</h2></div>
+<p class="subtitle">Complete rental history</p>
+
+{% if not rentals %}
+  <div class="empty">No rentals yet.</div>
+{% else %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>User</th><th>Motorcycle</th><th>Days</th><th>Total</th><th>Late Fee</th>
+        <th>Payment</th><th>Ref</th><th>Date</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rentals %}
+      <tr>
+        <td>{{ r.username }}</td>
+        <td>{{ r.motorcycle }}</td>
+        <td>{{ r.days }}</td>
+        <td>₱{{ r.total }}</td>
+        <td>₱{{ r.late_fee or 0 }}</td>
+        <td>{{ r.payment_method or '—' }}</td>
+        <td>{{ r.payment_ref or '—' }}</td>
+        <td>{{ r.date }}</td>
+        <td class="{% if r.status == 'Overdue' %}status-overdue{% elif r.status == 'Pending Confirmation' %}status-pending{% elif r.status == 'Rented' %}status-rented{% endif %}">
+          {{ r.status }}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

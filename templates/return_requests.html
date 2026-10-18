@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Return Requests · MotoQR{% endblock %}
+{% block content %}
+<div class="section-bar"><h2>RETURN REQUESTS</h2></div>
+<p class="subtitle">Approve or reject pending returns</p>
+
+{% if not pending %}
+  <div class="empty">No pending return requests.</div>
+{% else %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>User</th><th>Motorcycle</th><th>Message</th><th>Date</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+      {% for r in pending %}
+      <tr>
+        <td>{{ r.username }}</td>
+        <td>{{ r.motorcycle }}</td>
+        <td>{{ r.message }}</td>
+        <td>{{ r.date }}</td>
+        <td>
+          <form method="post" style="display:inline">
+            <input type="hidden" name="index" value="{{ loop.index0 }}" />
+            <button class="btn green filled" name="action" value="approve" type="submit">Approve</button>
+            <button class="btn red" name="action" value="reject" type="submit">Reject</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

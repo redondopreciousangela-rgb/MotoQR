@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Pending Payments · MotoQR{% endblock %}
+{% block content %}
+<div class="section-bar"><h2>PENDING PAYMENTS</h2></div>
+<p class="subtitle">Verify online payments or receive cash, then confirm</p>
+
+{% if not pending %}
+  <div class="empty">No pending payments right now.</div>
+{% else %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Client</th><th>Contact</th><th>Motorcycle</th><th>Days</th>
+        <th>Total</th><th>Method</th><th>Ref</th><th>Date</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in pending %}
+      <tr>
+        <td>{{ r.username }}</td>
+        <td>{{ r.contact }}</td>
+        <td>{{ r.motorcycle }}</td>
+        <td>{{ r.days }}</td>
+        <td>₱{{ r.total }}</td>
+        <td>{{ r.payment_method }}</td>
+        <td>{{ r.payment_ref }}</td>
+        <td>{{ r.date }}</td>
+        <td>
+          <form method="post" style="display:inline">
+            <input type="hidden" name="index" value="{{ loop.index0 }}" />
+            <button class="btn green filled" name="action" value="confirm" type="submit">Confirm</button>
+            <button class="btn red" name="action" value="reject" type="submit">Reject</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}
