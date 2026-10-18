@@ -32,7 +32,6 @@ GPS_CENTER_LAT = 14.5995
 GPS_CENTER_LNG = 120.9842
 
 gps_positions = {}
-
 LOGIN_MAX_ATTEMPTS = 5
 LOGIN_LOCK_MINUTES = 5
 _login_attempts = {}
@@ -70,8 +69,7 @@ def _record_login_failure(username):
 
 
 def _clear_login_failures(username):
-    key = (username or "").strip().lower()
-    _login_attempts.pop(key, None)
+    _login_attempts.pop((username or "").strip().lower(), None)
 
 
 def ensure_dirs():
@@ -232,8 +230,7 @@ def check_overdue():
         if not rental.get("overdue_notified"):
             notify(rental["username"], "Rental Overdue — Late Fee Applied",
                    f"Your rental of {rental['motorcycle']} is overdue by {od} day(s).\n"
-                   f"Late fee: ₱{LATE_FEE_PER_DAY}/day. Current fee: ₱{fee}.\n"
-                   f"Please return the unit as soon as possible.", ntype="danger")
+                   f"Late fee: ₱{LATE_FEE_PER_DAY}/day. Current fee: ₱{fee}.\nPlease return the unit as soon as possible.", ntype="danger")
             notify_admins("Overdue Rental Alert",
                           f"{rental['username']} — {rental['motorcycle']} · {od} day(s) · ₱{fee}", ntype="warning")
             rental["overdue_notified"] = True
@@ -668,6 +665,44 @@ def api_gps():
 @admin_required
 def users_list():
     return render_template("users.html", user=current_user(), users=get_users(), unread=unread_count(session["username"]))
+
+
+@app.route("/admin/add-motorcycle", methods=["GET", "POST"])
+@admin_required
+def add_motorcycle():
+    if request.method == "POST":
+        mid = request.form.get("id", "").strip().upper()
+        name = request.form.get("name", "").strip()
+        try:
+            rate = int(request.form.get("rate", "0"))
+            if rate <= 0:
+                raise ValueError
+        except Exception:
+            flash("Enter a valid daily rate.", "warning")
+            return render_template("add_motorcycle.html", user=current_user(), unread=unread_count(session["username"]))
+        if not mid or not name:
+            flash("ID and name are required.", "warning")
+            return render_template("add_motorcycle.html", user=current_user(), unread=unread_count(session["username"]))
+        bikes = get_motorcycles()
+        if any(b["id"] == mid for b in bikes):
+            flash(f"Motorcycle ID {mid} already exists.", "danger")
+            return render_template("add_motorcycle.html", user=current_user(), unread=unread_count(session["username"]))
+        image_file = request.files.get("image")
+        os.makedirs(IMAGE_DIR, exist_ok=True)
+        if image_file and image_file.filename:
+            ext = os.path.splitext(image_file.filename)[1].lower()
+            if ext not in (".jpg", ".jpeg", ".png", ".webp"):
+                flash("Image must be JPG, PNG, or WEBP.", "warning")
+                return render_template("add_motorcycle.html", user=current_user(), unread=unread_count(session["username"]))
+            image_file.save(os.path.join(IMAGE_DIR, f"{mid}.jpg"))
+        bikes.append({
+            "id": mid, "name": name, "rate": rate,
+            "status": "Available", "image": f"image/{mid}.jpg",
+        })
+        save_motorcycles(bikes)
+        flash(f"{name} ({mid}) added to the fleet.", "success")
+        return redirect(url_for("admin_home"))
+    return render_template("add_motorcycle.html", user=current_user(), unread=unread_count(session["username"]))
 
 
 ensure_dirs()
