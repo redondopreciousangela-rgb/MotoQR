@@ -28,7 +28,7 @@
   {% for bike in bikes %}
   {% set nm = bike.name|lower %}
   {% set category = bike.category if bike.category else ('Dirt Bike' if ('crf' in nm or 'klx' in nm or 'dirt' in nm or 'wr250' in nm) else ('Big Bike' if ('ninja' in nm or 'cbr' in nm or 'r15' in nm or '400' in nm or 'mt-15' in nm or 'cb150r' in nm) else ('Scooter' if ('click' in nm or 'mio' in nm or 'beat' in nm or 'aerox' in nm or 'adv' in nm or 'nmax' in nm or 'pcx' in nm or 'burgman' in nm or 'fazzio' in nm or 'airblade' in nm) else ('Underbone' if ('raider' in nm or 'sniper' in nm or 'xrm' in nm or 'rouser' in nm) else 'Standard'))) %}
-  <div class="card bike-card" data-category="{{ category }}">
+  <div class="card bike-card" data-category="{{ category }}" data-created="{{ bike.created_at|default('') }}">
     <img src="{{ url_for('serve_image', filename=bike.id + '.jpg') }}" alt="{{ bike.name }}"
          onerror="this.style.opacity=0.3" />
     <div class="card-body">
@@ -38,7 +38,7 @@
       <div class="hint">Type: {{ category }}</div>
       {% if bike.created_at %}
         {% set age = (range(1)|list|length) %}
-        <span class="pill reserved">New!</span>
+        <span class="pill reserved new-label" hidden>New!</span>
       {% endif %}
       {% set st = bike.status|lower %}
       <span class="pill {{ st }}">{{ bike.status }}</span>
@@ -59,8 +59,14 @@ if (window.lucide) lucide.createIcons();
 const categoryFilter = document.getElementById('bikeCategoryFilter');
 if (categoryFilter) categoryFilter.addEventListener('change', () => {
   document.querySelectorAll('.bike-card').forEach(card => {
-    card.hidden = categoryFilter.value !== 'all' && card.dataset.category !== categoryFilter.value;
+    card.style.display = categoryFilter.value !== 'all' && card.dataset.category !== categoryFilter.value ? 'none' : '';
   });
+});
+document.querySelectorAll('.bike-card[data-created]').forEach(card => {
+  const created = Date.parse(card.dataset.created || '');
+  const fresh = Number.isFinite(created) && Date.now() - created <= 7 * 24 * 60 * 60 * 1000;
+  const label = card.querySelector('.new-label');
+  if (label) label.hidden = !fresh;
 });
 </script>
 {% endblock %}
