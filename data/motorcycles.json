@@ -1,0 +1,142 @@
+[
+  {
+    "id": "M001",
+    "name": "Honda Click 125i",
+    "rate": 500,
+    "status": "Available",
+    "image": "image/M001.jpg"
+  },
+  {
+    "id": "M002",
+    "name": "Yamaha Mio Sporty",
+    "rate": 450,
+    "status": "Available",
+    "image": "image/M002.jpg"
+  },
+  {
+    "id": "M003",
+    "name": "Honda Beat",
+    "rate": 400,
+    "status": "Available",
+    "image": "image/M003.jpg"
+  },
+  {
+    "id": "M004",
+    "name": "Yamaha Aerox",
+    "rate": 700,
+    "status": "Available",
+    "image": "image/M004.jpg"
+  },
+  {
+    "id": "M005",
+    "name": "Honda ADV 160",
+    "rate": 800,
+    "status": "Available",
+    "image": "image/M005.jpg"
+  },
+  {
+    "id": "M006",
+    "name": "Yamaha NMAX",
+    "rate": 750,
+    "status": "Available",
+    "image": "image/M006.jpg"
+  },
+  {
+    "id": "M007",
+    "name": "Honda PCX 160",
+    "rate": 750,
+    "status": "Available",
+    "image": "image/M007.jpg"
+  },
+  {
+    "id": "M008",
+    "name": "Suzuki Raider 150",
+    "rate": 600,
+    "status": "Available",
+    "image": "image/M008.jpg"
+  },
+  {
+    "id": "M009",
+    "name": "Honda XRM 125",
+    "rate": 550,
+    "status": "Available",
+    "image": "image/M009.jpg"
+  },
+  {
+    "id": "M010",
+    "name": "Yamaha Sniper 155",
+    "rate": 650,
+    "status": "Available",
+    "image": "image/M010.jpg"
+  },
+  {
+    "id": "M011",
+    "name": "Honda CBR150R",
+    "rate": 900,
+    "status": "Available",
+    "image": "image/M011.jpg"
+  },
+  {
+    "id": "M012",
+    "name": "Yamaha R15",
+    "rate": 950,
+    "status": "Available",
+    "image": "image/M012.jpg"
+  },
+  {
+    "id": "M013",
+    "name": "Kawasaki Ninja 400",
+    "rate": 1200,
+    "status": "Available",
+    "image": "image/M013.jpg"
+  },
+  {
+    "id": "M014",
+    "name": "Yamaha MT-15",
+    "rate": 850,
+    "status": "Available",
+    "image": "image/M014.jpg"
+  },
+  {
+    "id": "M015",
+    "name": "Honda CB150R",
+    "rate": 800,
+    "status": "Available",
+    "image": "image/M015.jpg"
+  },
+  {
+    "id": "M016",
+    "name": "Suzuki Burgman Street",
+    "rate": 550,
+    "status": "Available",
+    "image": "image/M016.jpg"
+  },
+  {
+    "id": "M017",
+    "name": "Yamaha Fazzio",
+    "rate": 500,
+    "status": "Available",
+    "image": "image/M017.jpg"
+  },
+  {
+    "id": "M018",
+    "name": "Honda Airblade 160",
+    "rate": 700,
+    "status": "Available",
+    "image": "image/M018.jpg"
+  },
+  {
+    "id": "M019",
+    "name": "Kawasaki Rouser NS160",
+    "rate": 700,
+    "status": "Available",
+    "image": "image/M019.jpg"
+  },
+  {
+    "id": "M020",
+    "name": "Suzuki Raider R150",
+    "rate": 650,
+    "status": "Available",
+    "image": "image/M020.jpg"
+  }
+]
