@@ -2,7 +2,21 @@
 {% block title %}Browse · MotoQR{% endblock %}
 {% block content %}
 <div class="section-bar"><h2>AVAILABLE MOTORCYCLES</h2></div>
-<p class="subtitle">Select a unit and complete the rental form</p>
+<p class="subtitle">Filter the fleet by motorcycle type, then select an available unit</p>
+
+<div class="form-card" style="margin:16px 0;padding:14px">
+  <div class="field" style="margin:0">
+    <label for="bikeCategoryFilter">MOTORCYCLE TYPE</label>
+    <select id="bikeCategoryFilter">
+      <option value="all">All types</option>
+      <option value="Scooter">Scooters</option>
+      <option value="Big Bike">Big bikes</option>
+      <option value="Dirt Bike">Dirt bikes</option>
+      <option value="Underbone">Underbone</option>
+      <option value="Standard">Standard / Other</option>
+    </select>
+  </div>
+</div>
 
 <div class="stats">
   <div class="stat green"><div class="label">AVAILABLE</div><div class="value">{{ available }}</div></div>
@@ -12,15 +26,23 @@
 
 <div class="grid">
   {% for bike in bikes %}
-  <div class="card">
+  {% set nm = bike.name|lower %}
+  {% set category = bike.category if bike.category else ('Dirt Bike' if ('crf' in nm or 'klx' in nm or 'dirt' in nm or 'wr250' in nm) else ('Big Bike' if ('ninja' in nm or 'cbr' in nm or 'r15' in nm or '400' in nm or 'mt-15' in nm or 'cb150r' in nm) else ('Scooter' if ('click' in nm or 'mio' in nm or 'beat' in nm or 'aerox' in nm or 'adv' in nm or 'nmax' in nm or 'pcx' in nm or 'burgman' in nm or 'fazzio' in nm or 'airblade' in nm) else ('Underbone' if ('raider' in nm or 'sniper' in nm or 'xrm' in nm or 'rouser' in nm) else 'Standard'))) %}
+  <div class="card bike-card" data-category="{{ category }}">
     <img src="{{ url_for('serve_image', filename=bike.id + '.jpg') }}" alt="{{ bike.name }}"
          onerror="this.style.opacity=0.3" />
     <div class="card-body">
       <div class="card-id">{{ bike.id }}</div>
       <div class="card-name">{{ bike.name }}</div>
       <div class="card-rate">₱{{ bike.rate }} / day</div>
+      <div class="hint">Type: {{ category }}</div>
+      {% if bike.created_at %}
+        {% set age = (range(1)|list|length) %}
+        <span class="pill reserved">New!</span>
+      {% endif %}
       {% set st = bike.status|lower %}
       <span class="pill {{ st }}">{{ bike.status }}</span>
+      <a class="btn block" href="{{ url_for('motorcycle_status', bike_id=bike.id) }}">QR / Status</a>
       {% if bike.status == 'Available' %}
         <a class="btn filled block" href="{{ url_for('rent', bike_id=bike.id) }}">SELECT →</a>
       {% else %}
@@ -30,4 +52,15 @@
   </div>
   {% endfor %}
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+if (window.lucide) lucide.createIcons();
+const categoryFilter = document.getElementById('bikeCategoryFilter');
+if (categoryFilter) categoryFilter.addEventListener('change', () => {
+  document.querySelectorAll('.bike-card').forEach(card => {
+    card.hidden = categoryFilter.value !== 'all' && card.dataset.category !== categoryFilter.value;
+  });
+});
+</script>
 {% endblock %}
