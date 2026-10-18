@@ -159,7 +159,10 @@ def register_routes(app):
     @admin_required
     def all_rentals():
         check_overdue()
-        rentals = sorted(get_rentals(), key=lambda r: r.get("date", ""), reverse=True)
+        rentals = sorted(
+            [r for r in get_rentals() if r.get("status") in ("Rented", "Overdue")],
+            key=lambda r: r.get("date", ""), reverse=True,
+        )
         return render_template("all_rentals.html", user=current_user(), rentals=rentals,
                                unread=unread_count(session["username"]))
 
