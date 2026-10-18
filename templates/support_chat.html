@@ -6,11 +6,9 @@
     <i data-lucide="arrow-left"></i>
   </a>
   <div>
-    <div class="section-bar"><h2>{{ ticket.subject }}</h2></div>
+    <div class="section-bar"><h2 id="chatTitle">{{ ticket.contact if ticket.contact and ticket.contact != '—' else ticket.username }}</h2></div>
     <p class="subtitle" id="chatMeta">
-      {{ ticket.id }}
-      {% if is_admin %} · {{ ticket.username }}{% endif %}
-      {% if ticket.contact and ticket.contact != '—' %} · <span id="chatPhone">{{ ticket.contact }}</span>{% endif %}
+      {{ ticket.id }} · {{ ticket.subject }}
       {% if ticket.motorcycle and ticket.motorcycle != '—' %} · <span id="chatUnit">{{ ticket.motorcycle }}</span>{% endif %}
       · <span class="pill {{ 'reserved' if ticket.status == 'Open' else '' }}" id="chatStatus">{{ ticket.status }}</span>
     </p>
@@ -121,8 +119,8 @@
         renderMessages(msgs);
         updateStatus(data.status);
       }
-      const phone = document.getElementById('chatPhone');
-      if (phone && data.contact && data.contact !== '—') phone.textContent = data.contact;
+      const title = document.getElementById('chatTitle');
+      if (title) title.textContent = (data.contact && data.contact !== '—') ? data.contact : (data.username || 'Customer');
       const unit = document.getElementById('chatUnit');
       if (unit && data.motorcycle && data.motorcycle !== '—') unit.textContent = data.motorcycle;
     } catch (e) {}
