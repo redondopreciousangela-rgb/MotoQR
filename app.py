@@ -87,6 +87,17 @@ def get_motorcycles():
     if not bikes:
         bikes = default_motorcycles()
         save_json(MOTORCYCLES_FILE, bikes)
+
+    # Repair legacy records where maintenance says the unit is unavailable
+    # but its fleet status still says Available.
+    changed = False
+    for bike in bikes:
+        maintenance = bike.get("maintenance_status", "Up to date")
+        if maintenance in ("In maintenance", "Out of service") and bike.get("status") != maintenance:
+            bike["status"] = maintenance
+            changed = True
+    if changed:
+        save_json(MOTORCYCLES_FILE, bikes)
     return bikes
 
 
