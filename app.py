@@ -1,14 +1,11 @@
 import os, zlib, base64
 _d = os.path.dirname(os.path.abspath(__file__))
+_names = ["app_zlib_0a.txt", "app_zlib_0b.txt", "app_zlib_1.txt"]
 _parts = []
-_i = 0
-while True:
-    _p = os.path.join(_d, f"app_zlib_{_i}.txt")
+for _n in _names:
+    _p = os.path.join(_d, _n)
     if not os.path.exists(_p):
-        break
+        raise SystemExit(f"MotoQR: missing {_n}")
     _parts.append(open(_p, encoding="ascii").read().strip())
-    _i += 1
-if not _parts:
-    raise SystemExit("MotoQR: missing app_zlib_*.txt — upload incomplete")
 _code = zlib.decompress(base64.b64decode("".join(_parts))).decode("utf-8")
 exec(compile(_code, "app.py", "exec"), globals())
