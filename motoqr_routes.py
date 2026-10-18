@@ -471,7 +471,7 @@ def register_routes(app):
                               f"From: {session['username']} · {ticket.get('subject')}\n{text}",
                               ntype="warning")
             return redirect(url_for("support_thread", ticket_id=ticket_id))
-        if not ticket.get("contact") or ticket.get("contact") == "—":
+        if not ticket.get("contact") or str(ticket.get("contact")).strip() in ("—", "-", "N/A"):
             ticket["contact"] = client_contact(ticket.get("username", "")) or "—"
         return render_template("support_chat.html", user=current_user(), ticket=ticket,
                                unread=unread_count(session["username"]), is_admin=False)
@@ -482,7 +482,7 @@ def register_routes(app):
         threads = sorted(get_support_messages(),
                          key=lambda m: m.get("updated") or m.get("date") or "", reverse=True)
         for t in threads:
-            if not t.get("contact") or t.get("contact") == "—":
+            if not t.get("contact") or str(t.get("contact")).strip() in ("—", "-", "N/A"):
                 t["contact"] = client_contact(t.get("username", "")) or "—"
         return render_template("admin_support.html", user=current_user(), threads=threads,
                                open_count=open_support_count(),
