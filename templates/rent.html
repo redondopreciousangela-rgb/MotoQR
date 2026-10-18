@@ -15,7 +15,7 @@
 </div>
 
 <div class="form-card">
-  <form method="post" enctype="multipart/form-data">
+  <form method="post" enctype="multipart/form-data" id="rentForm">
     <div class="field">
       <label>CONTACT NUMBER</label>
       <input name="contact" placeholder="09xxxxxxxxx" inputmode="tel" required />
@@ -26,10 +26,17 @@
     </div>
     <div class="field">
       <label>VALID ID / DRIVER'S LICENSE <span class="req">*</span></label>
-      <input type="file" name="id_document" id="idFile"
-             accept="image/*,.pdf,image/jpeg,image/png,image/webp,application/pdf" required />
-      <p class="hint">Upload a clear photo or PDF of your government ID or driver's license.</p>
+      <p class="hint">Take a photo with your camera or upload from your gallery (JPG/PNG/PDF).</p>
+      <div class="id-actions">
+        <button type="button" class="btn filled" id="btnCamera">📷 Take photo</button>
+        <button type="button" class="btn" id="btnGallery">📁 Upload file</button>
+      </div>
+      <input type="file" name="id_document" id="idCamera"
+             accept="image/*" capture="environment" class="sr-only" />
+      <input type="file" id="idGallery"
+             accept="image/*,.pdf,image/jpeg,image/png,image/webp,application/pdf" class="sr-only" />
       <div id="idPreview" class="id-preview" hidden></div>
+      <p class="hint" id="idStatus">No ID selected yet.</p>
     </div>
     <div class="field">
       <label>PAYMENT METHOD</label>
@@ -52,7 +59,7 @@
 <script>
   const method = document.getElementById('payMethod');
   const ref = document.getElementById('payRef');
-  function sync() {
+  function syncPay() {
     if (method.value === 'Cash') {
       ref.required = false;
       ref.placeholder = 'Not required for cash';
@@ -61,16 +68,32 @@
       ref.placeholder = method.value === 'GCash' ? 'GCash reference number' : 'Last 4 digits / card ref';
     }
   }
-  method.addEventListener('change', sync);
-  sync();
+  method.addEventListener('change', syncPay);
+  syncPay();
 
-  const idFile = document.getElementById('idFile');
+  const idCamera = document.getElementById('idCamera');
+  const idGallery = document.getElementById('idGallery');
   const preview = document.getElementById('idPreview');
-  idFile.addEventListener('change', () => {
+  const status = document.getElementById('idStatus');
+  const form = document.getElementById('rentForm');
+
+  document.getElementById('btnCamera').addEventListener('click', () => idCamera.click());
+  document.getElementById('btnGallery').addEventListener('click', () => idGallery.click());
+
+  function showPreview(input) {
     preview.innerHTML = '';
     preview.hidden = true;
-    const f = idFile.files && idFile.files[0];
-    if (!f) return;
+    const f = input.files && input.files[0];
+    if (!f) {
+      status.textContent = 'No ID selected yet.';
+      return;
+    }
+    if (input === idGallery) {
+      const dt = new DataTransfer();
+      dt.items.add(f);
+      idCamera.files = dt.files;
+    }
+    status.textContent = 'Selected: ' + f.name;
     if (f.type.startsWith('image/')) {
       const img = document.createElement('img');
       img.src = URL.createObjectURL(f);
@@ -78,8 +101,19 @@
       preview.appendChild(img);
       preview.hidden = false;
     } else {
-      preview.textContent = 'Selected: ' + f.name;
+      preview.textContent = f.name;
       preview.hidden = false;
+    }
+  }
+
+  idCamera.addEventListener('change', () => showPreview(idCamera));
+  idGallery.addEventListener('change', () => showPreview(idGallery));
+
+  form.addEventListener('submit', (e) => {
+    if (!idCamera.files || !idCamera.files.length) {
+      e.preventDefault();
+      status.textContent = 'Please take a photo or upload your ID.';
+      status.style.color = 'var(--amber)';
     }
   });
 </script>
