@@ -1,25 +1,32 @@
 {% extends "base.html" %}
 {% block title %}Return · MotoQR{% endblock %}
 {% block content %}
-<div class="section-bar"><h2>RETURN RENT</h2></div>
-<p class="subtitle">Submit a return request for admin approval</p>
-
-<div class="form-card">
-  <form method="post">
-    <div class="field">
-      <label>SELECT YOUR MOTORCYCLE</label>
-      <select name="motorcycle" required>
-        <option value="">— choose —</option>
-        {% for r in active %}
-          <option value="{{ r.motorcycle }}">{{ r.motorcycle }} ({{ r.status }})</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="field">
-      <label>RETURN MESSAGE</label>
-      <textarea name="message" required placeholder="Condition notes, pickup location, etc."></textarea>
-    </div>
-    <button class="btn amber filled block" type="submit">SEND RETURN REQUEST</button>
-  </form>
+<div class="page-head">
+  <a class="page-back" href="{{ url_for('client_home') }}" aria-label="Back">
+    <i data-lucide="arrow-left"></i>
+  </a>
+  <div>
+    <div class="section-bar"><h2>RETURN RENT</h2></div>
+    <p class="subtitle">Request to return an active motorcycle</p>
+  </div>
 </div>
+
+<form method="post" class="form-card">
+  <div class="field">
+    <label>MOTORCYCLE</label>
+    <select name="motorcycle" required>
+      {% for r in active %}
+      <option value="{{ r.motorcycle }}">{{ r.motorcycle }} ({{ r.status }})</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label>MESSAGE</label>
+    <textarea name="message" placeholder="Condition notes, location, etc." required></textarea>
+  </div>
+  <button class="btn amber filled block" type="submit">SEND RETURN REQUEST</button>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>if (window.lucide) lucide.createIcons();</script>
 {% endblock %}

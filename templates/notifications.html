@@ -1,8 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Alerts · MotoQR{% endblock %}
 {% block content %}
-<div class="section-bar"><h2>NOTIFICATIONS</h2></div>
-<p class="subtitle">In-app alerts for your account</p>
+<div class="page-head">
+  <a class="page-back" href="{{ url_for('index') }}" aria-label="Back">
+    <i data-lucide="arrow-left"></i>
+  </a>
+  <div>
+    <div class="section-bar"><h2>NOTIFICATIONS</h2></div>
+    <p class="subtitle">In-app alerts for your account</p>
+  </div>
+</div>
 
 {% if not items %}
   <div class="empty">No notifications yet.</div>
@@ -15,4 +22,7 @@
   </div>
   {% endfor %}
 {% endif %}
+{% endblock %}
+{% block scripts %}
+<script>if (window.lucide) lucide.createIcons();</script>
 {% endblock %}

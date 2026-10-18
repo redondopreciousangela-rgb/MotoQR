@@ -1,8 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Users · MotoQR{% endblock %}
 {% block content %}
-<div class="section-bar"><h2>REGISTERED USERS</h2></div>
-<p class="subtitle">All accounts in the system</p>
+<div class="page-head">
+  <a class="page-back" href="{{ url_for('admin_home') }}" aria-label="Back to dashboard">
+    <i data-lucide="arrow-left"></i>
+  </a>
+  <div>
+    <div class="section-bar"><h2>REGISTERED USERS</h2></div>
+    <p class="subtitle">All accounts in the system</p>
+  </div>
+</div>
 
 <div class="table-wrap">
   <table>
@@ -17,4 +24,7 @@
     </tbody>
   </table>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>if (window.lucide) lucide.createIcons();</script>
 {% endblock %}
