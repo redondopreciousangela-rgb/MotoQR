@@ -129,7 +129,7 @@ th { background: var(--surface-alt); color: var(--cyan); font-size: 0.72rem; whi
 .gps-list { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px; max-height: 280px; overflow-y: auto; }
 .gps-item { padding: 10px; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
 .gps-item strong { color: var(--cyan); }
-.rent-hero { display: grid; grid-template-columns: minmax(180px, 240px) minmax(0, 1fr) 140px; grid-template-areas: "photo details qr"; align-items: center; gap: 14px; margin-bottom: 18px; }
+.rent-hero { display: grid; width: min(100%, 780px); grid-template-columns: minmax(180px, 240px) minmax(0, 1fr) 140px; grid-template-areas: "photo details qr"; align-items: center; gap: 14px; margin: 0 0 18px; }
 .rent-hero .rent-bike-photo { grid-area: photo; }
 .rent-hero .rent-bike-details { grid-area: details; }
 .rent-hero .rent-qr-panel { grid-area: qr; }
@@ -174,7 +174,7 @@ body.sidebar-open { overflow: hidden; }
 .leaflet-pane, .leaflet-top, .leaflet-bottom { z-index: 400 !important; }
 .leaflet-control { z-index: 410 !important; }
 @media (max-width: 900px) {
-  .rent-hero { grid-template-columns: minmax(0, 1fr) 112px; grid-template-areas: "photo qr" "details qr"; gap: 10px; align-items: center; }
+  .rent-hero { width: 100%; grid-template-columns: minmax(0, 1fr) 112px; grid-template-areas: "photo qr" "details qr"; gap: 10px; align-items: start; }
   .rent-hero .rent-bike-photo { width: 100%; max-height: 180px; min-width: 0; }
   .rent-hero .rent-bike-details { align-self: start; min-width: 0; }
   .rent-hero .rent-bike-details h2 { overflow-wrap: anywhere; font-size: 1rem; }
@@ -194,8 +194,15 @@ body.sidebar-open { overflow: hidden; }
   .nav-toggle { display: none; }
   .sidebar, .sidebar-overlay { display: none !important; }
 }
-@media (min-width: 701px) {
-  .rent-hero { grid-template-columns: minmax(180px, 240px) minmax(0, 1fr) 140px; grid-template-areas: "photo details qr"; }
+@media (min-width: 901px) {
+  .rent-hero { grid-template-columns: minmax(180px, 240px) minmax(160px, 1fr) 140px; grid-template-areas: "photo details qr"; }
+}
+@media (max-width: 420px) {
+  .rent-hero { grid-template-columns: minmax(0, 1fr) 96px; gap: 8px; }
+  .rent-hero .rent-bike-photo { max-height: 150px; }
+  .rent-hero .rent-qr-panel { min-height: 136px; padding: 7px 4px; }
+  .rent-hero .rent-qr-image { width: 70px; height: 70px; }
+  .rent-qr-panel span, .rent-qr-panel small { font-size: .58rem; }
 }
 @media (min-width: 800px) {
   .gps-layout { grid-template-columns: 260px 1fr; }
