@@ -19,3 +19,9 @@ ENV/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Runtime captured ID photos (local only)
+captured_ids/*.jpg
+captured_ids/*.png
+captured_ids/*.pdf
+!captured_ids/.gitkeep
