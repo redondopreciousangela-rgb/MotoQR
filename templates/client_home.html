@@ -27,7 +27,18 @@
 <div class="grid">
   {% for bike in bikes %}
   {% set nm = bike.name|lower %}
-  {% set category = bike.category if bike.category else ('Dirt Bike' if ('crf' in nm or 'klx' in nm or 'dirt' in nm or 'wr250' in nm) else ('Big Bike' if ('ninja' in nm or 'cbr' in nm or 'r15' in nm or '400' in nm or 'mt-15' in nm or 'cb150r' in nm) else ('Scooter' if ('click' in nm or 'mio' in nm or 'beat' in nm or 'aerox' in nm or 'adv' in nm or 'nmax' in nm or 'pcx' in nm or 'burgman' in nm or 'fazzio' in nm or 'airblade' in nm) else ('Underbone' if ('raider' in nm or 'sniper' in nm or 'xrm' in nm or 'rouser' in nm) else 'Standard'))) %}
+  {% set category = bike.category|default('Standard', true) %}
+  {% if not bike.category %}
+    {% if 'crf' in nm or 'klx' in nm or 'dirt' in nm or 'wr250' in nm %}
+      {% set category = 'Dirt Bike' %}
+    {% elif 'ninja' in nm or 'cbr' in nm or 'r15' in nm or '400' in nm or 'mt-15' in nm or 'cb150r' in nm %}
+      {% set category = 'Big Bike' %}
+    {% elif 'click' in nm or 'mio' in nm or 'beat' in nm or 'aerox' in nm or 'adv' in nm or 'nmax' in nm or 'pcx' in nm or 'burgman' in nm or 'fazzio' in nm or 'airblade' in nm %}
+      {% set category = 'Scooter' %}
+    {% elif 'raider' in nm or 'sniper' in nm or 'xrm' in nm or 'rouser' in nm %}
+      {% set category = 'Underbone' %}
+    {% endif %}
+  {% endif %}
   <div class="card bike-card" data-category="{{ category }}" data-created="{{ bike.created_at|default('') }}">
     <img src="{{ url_for('serve_image', filename=bike.id + '.jpg') }}" alt="{{ bike.name }}"
          onerror="this.style.opacity=0.3" />
