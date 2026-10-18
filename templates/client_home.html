@@ -37,7 +37,6 @@
       <div class="card-rate">₱{{ bike.rate }} / day</div>
       <div class="hint">Type: {{ category }}</div>
       {% if bike.created_at %}
-        {% set age = (range(1)|list|length) %}
         <span class="pill reserved new-label" hidden>New!</span>
       {% endif %}
       {% set st = bike.status|lower %}
