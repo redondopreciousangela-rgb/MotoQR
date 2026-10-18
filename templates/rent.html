@@ -12,13 +12,19 @@
 </div>
 
 <div class="rent-hero">
-  <img src="{{ url_for('serve_image', filename=bike.id + '.jpg') }}" alt="{{ bike.name }}"
+  <img class="rent-bike-photo" src="{{ url_for('serve_image', filename=bike.id + '.jpg') }}" alt="{{ bike.name }}"
        onerror="this.style.opacity=0.35" />
-  <div>
+  <div class="rent-bike-details">
     <div class="card-id">{{ bike.id }}</div>
     <h2 style="margin:4px 0">{{ bike.name }}</h2>
     <div class="card-rate" style="font-size:1.2rem">₱{{ bike.rate }} / day</div>
   </div>
+  <a class="rent-qr-panel" href="{{ url_for('motorcycle_status', bike_id=bike.id) }}" target="_blank" rel="noopener"
+     aria-label="Open live QR status for {{ bike.name }}">
+    <img class="rent-qr-image" src="{{ url_for('motorcycle_qr', bike_id=bike.id) }}" alt="QR code for {{ bike.name }}" />
+    <span>SCAN FOR LIVE STATUS</span>
+    <small>Availability · Maintenance</small>
+  </a>
 </div>
 
 <div class="form-card">
