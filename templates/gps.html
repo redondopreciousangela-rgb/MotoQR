@@ -20,13 +20,18 @@
     width: 14px !important;
     height: 14px !important;
   }
-  .moto-marker.overdue {
-    background: #ff3b5c;
-  }
+  .moto-marker.overdue { background: #ff3b5c; }
 </style>
 
-<div class="section-bar"><h2>REAL-TIME GPS TRACKER</h2></div>
-<p class="subtitle">Live positions for active rentals</p>
+<div class="page-head">
+  <a class="page-back" href="{{ url_for('admin_home') }}" aria-label="Back to dashboard">
+    <i data-lucide="arrow-left"></i>
+  </a>
+  <div>
+    <div class="section-bar"><h2>REAL-TIME GPS TRACKER</h2></div>
+    <p class="subtitle">Live positions for active rentals</p>
+  </div>
+</div>
 
 <div class="gps-layout">
   <div class="gps-list" id="gpsList">
@@ -52,21 +57,15 @@
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
         crossorigin=""></script>
 <script>
+if (window.lucide) lucide.createIcons();
 const listEl = document.getElementById('gpsList');
 const statusEl = document.getElementById('gpsStatus');
-
-const map = L.map('map', {
-  zoomControl: true,
-  attributionControl: true,
-}).setView([14.5995, 120.9842], 12);
-
+const map = L.map('map', { zoomControl: true, attributionControl: true }).setView([14.5995, 120.9842], 12);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
 }).addTo(map);
-
 const markers = {};
-
 function markerIcon(overdue) {
   return L.divIcon({
     className: '',
@@ -75,7 +74,6 @@ function markerIcon(overdue) {
     iconAnchor: [7, 7],
   });
 }
-
 function updateMarkers(units) {
   const seen = new Set();
   units.forEach(u => {
@@ -88,9 +86,7 @@ function updateMarkers(units) {
       markers[id].setPopupContent(popup);
       markers[id].setIcon(markerIcon(u.status === 'Overdue'));
     } else {
-      markers[id] = L.marker(latlng, { icon: markerIcon(u.status === 'Overdue') })
-        .addTo(map)
-        .bindPopup(popup);
+      markers[id] = L.marker(latlng, { icon: markerIcon(u.status === 'Overdue') }).addTo(map).bindPopup(popup);
     }
   });
   Object.keys(markers).forEach(id => {
@@ -99,35 +95,29 @@ function updateMarkers(units) {
       delete markers[id];
     }
   });
-  if (units.length === 1) {
-    map.setView([units[0].lat, units[0].lng], 14);
-  } else if (units.length > 1) {
+  if (units.length === 1) map.setView([units[0].lat, units[0].lng], 14);
+  else if (units.length > 1) {
     const group = L.featureGroup(Object.values(markers));
     map.fitBounds(group.getBounds().pad(0.2));
   }
 }
-
 async function refresh() {
   try {
     const res = await fetch('{{ url_for("api_gps") }}');
     const units = await res.json();
     updateMarkers(units);
-    if (!units.length) {
-      listEl.innerHTML = '<div class="empty">No active tracked units</div>';
-    } else {
-      listEl.innerHTML = units.map(u => `
-        <div class="gps-item">
-          <strong>${u.id}</strong> · ${u.name}<br/>
-          ${u.lat}, ${u.lng} · ${u.updated}<br/>
-          Rider: ${u.username} · ${u.status}
-        </div>`).join('');
-    }
+    if (!units.length) listEl.innerHTML = '<div class="empty">No active tracked units</div>';
+    else listEl.innerHTML = units.map(u => `
+      <div class="gps-item">
+        <strong>${u.id}</strong> · ${u.name}<br/>
+        ${u.lat}, ${u.lng} · ${u.updated}<br/>
+        Rider: ${u.username} · ${u.status}
+      </div>`).join('');
     statusEl.textContent = `${units.length} unit(s) tracked · ${new Date().toLocaleTimeString()}`;
   } catch (e) {
     statusEl.textContent = 'Failed to refresh GPS data';
   }
 }
-
 refresh();
 setInterval(refresh, 2000);
 setTimeout(() => map.invalidateSize(), 200);
