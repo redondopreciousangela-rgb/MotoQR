@@ -332,7 +332,8 @@ def register_routes(app):
                         maintenance_status = "Up to date"
                     bikes.append({
                         "id": mid, "name": name, "rate": rate,
-                        "status": "Available", "image": f"image/{mid}.jpg",
+                        "status": maintenance_status if maintenance_status in ("In maintenance", "Out of service") else "Available",
+                        "image": f"image/{mid}.jpg",
                         "category": category, "created_at": datetime.now().isoformat(timespec="seconds"),
                         "maintenance_status": maintenance_status,
                         "maintenance_notes": request.form.get("maintenance_notes", "").strip()[:500],
