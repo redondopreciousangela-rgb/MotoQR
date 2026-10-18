@@ -67,12 +67,12 @@
         <a href="{{ url_for('return_requests') }}"><i data-lucide="undo-2"></i> Returns</a>
         <a href="{{ url_for('gps_tracker') }}"><i data-lucide="map-pin"></i> GPS</a>
         <a href="{{ url_for('users_list') }}"><i data-lucide="users"></i> Users</a>
-        <a href="{{ url_for('admin_support') }}"><i data-lucide="life-buoy"></i> Support</a>
+        <a href="{{ url_for('admin_support') }}"><i data-lucide="message-circle-more"></i> Support</a>
       {% else %}
         <a href="{{ url_for('client_home') }}"><i data-lucide="layout-grid"></i> Browse</a>
         <a href="{{ url_for('my_rentals') }}"><i data-lucide="clipboard-list"></i> My Rentals</a>
         <a href="{{ url_for('return_unit') }}"><i data-lucide="undo-2"></i> Return</a>
-        <a href="{{ url_for('customer_service') }}"><i data-lucide="life-buoy"></i> Support</a>
+        <a href="{{ url_for('customer_service') }}"><i data-lucide="message-circle-more"></i> Support</a>
       {% endif %}
       <a href="{{ url_for('notifications') }}">
         <i data-lucide="bell"></i> Alerts{% if unread %} <span class="badge">{{ unread }}</span>{% endif %}
