@@ -5,7 +5,8 @@
 <p class="subtitle">Complete the form and submit payment for admin confirmation</p>
 
 <div class="rent-hero">
-  <img src="{{ url_for('serve_image', filename=bike.id + '.jpg') }}" alt="{{ bike.name }}" />
+  <img src="{{ url_for('serve_image', filename=bike.id + '.jpg') }}" alt="{{ bike.name }}"
+       onerror="this.style.opacity=0.35" />
   <div>
     <div class="card-id">{{ bike.id }}</div>
     <h2 style="margin:4px 0">{{ bike.name }}</h2>
@@ -14,14 +15,21 @@
 </div>
 
 <div class="form-card">
-  <form method="post">
+  <form method="post" enctype="multipart/form-data">
     <div class="field">
       <label>CONTACT NUMBER</label>
-      <input name="contact" placeholder="09xxxxxxxxx" required />
+      <input name="contact" placeholder="09xxxxxxxxx" inputmode="tel" required />
     </div>
     <div class="field">
       <label>RENTAL DAYS</label>
       <input type="number" name="days" min="1" value="1" required />
+    </div>
+    <div class="field">
+      <label>VALID ID / DRIVER'S LICENSE <span class="req">*</span></label>
+      <input type="file" name="id_document" id="idFile"
+             accept="image/*,.pdf,image/jpeg,image/png,image/webp,application/pdf" required />
+      <p class="hint">Upload a clear photo or PDF of your government ID or driver's license.</p>
+      <div id="idPreview" class="id-preview" hidden></div>
     </div>
     <div class="field">
       <label>PAYMENT METHOD</label>
@@ -55,5 +63,24 @@
   }
   method.addEventListener('change', sync);
   sync();
+
+  const idFile = document.getElementById('idFile');
+  const preview = document.getElementById('idPreview');
+  idFile.addEventListener('change', () => {
+    preview.innerHTML = '';
+    preview.hidden = true;
+    const f = idFile.files && idFile.files[0];
+    if (!f) return;
+    if (f.type.startsWith('image/')) {
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(f);
+      img.alt = 'ID preview';
+      preview.appendChild(img);
+      preview.hidden = false;
+    } else {
+      preview.textContent = 'Selected: ' + f.name;
+      preview.hidden = false;
+    }
+  });
 </script>
 {% endblock %}

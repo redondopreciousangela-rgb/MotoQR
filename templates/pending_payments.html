@@ -12,7 +12,7 @@
     <thead>
       <tr>
         <th>Client</th><th>Contact</th><th>Motorcycle</th><th>Days</th>
-        <th>Total</th><th>Method</th><th>Ref</th><th>Date</th><th>Action</th>
+        <th>Total</th><th>Method</th><th>Ref</th><th>ID</th><th>Date</th><th>Action</th>
       </tr>
     </thead>
     <tbody>
@@ -25,9 +25,16 @@
         <td>₱{{ r.total }}</td>
         <td>{{ r.payment_method }}</td>
         <td>{{ r.payment_ref }}</td>
+        <td>
+          {% if r.id_document %}
+            <a href="{{ url_for('serve_upload', filename=r.id_document) }}" target="_blank" rel="noopener">View ID</a>
+          {% else %}
+            —
+          {% endif %}
+        </td>
         <td>{{ r.date }}</td>
         <td>
-          <form method="post" style="display:inline">
+          <form method="post" style="display:flex;flex-wrap:wrap;gap:6px">
             <input type="hidden" name="index" value="{{ loop.index0 }}" />
             <button class="btn green filled" name="action" value="confirm" type="submit">Confirm</button>
             <button class="btn red" name="action" value="reject" type="submit">Reject</button>
