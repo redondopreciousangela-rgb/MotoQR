@@ -129,8 +129,14 @@ th { background: var(--surface-alt); color: var(--cyan); font-size: 0.72rem; whi
 .gps-list { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px; max-height: 280px; overflow-y: auto; }
 .gps-item { padding: 10px; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
 .gps-item strong { color: var(--cyan); }
-.rent-hero { display: grid; gap: 14px; margin-bottom: 18px; }
-.rent-hero img { width: 100%; border-radius: 14px; background: var(--surface-alt); object-fit: contain; max-height: 200px; }
+.rent-hero { display: grid; grid-template-columns: minmax(180px, 225px) minmax(180px, 1fr) 150px; align-items: center; gap: 14px; margin-bottom: 18px; }
+.rent-hero .rent-bike-photo { width: 100%; border-radius: 14px; background: var(--surface-alt); object-fit: contain; max-height: 200px; }
+.rent-bike-details { min-width: 0; }
+.rent-qr-panel { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-height: 190px; padding: 10px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); text-align: center; }
+.rent-qr-panel:hover { border-color: var(--cyan); opacity: 1; }
+.rent-hero .rent-qr-image { display: block; width: 116px; height: 116px; max-height: none; padding: 5px; object-fit: contain; background: #fff; border-radius: 8px; }
+.rent-qr-panel span { color: var(--cyan); font-size: .7rem; font-weight: 800; letter-spacing: .04em; }
+.rent-qr-panel small { color: var(--muted); font-size: .68rem; }
 .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
 .empty { text-align: center; color: var(--muted); padding: 36px 14px; }
 .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 5000; opacity: 0; visibility: hidden; transition: opacity 0.25s ease, visibility 0.25s ease; }
@@ -165,6 +171,9 @@ body.sidebar-open { overflow: hidden; }
 .leaflet-pane, .leaflet-top, .leaflet-bottom { z-index: 400 !important; }
 .leaflet-control { z-index: 410 !important; }
 @media (max-width: 900px) {
+  .rent-hero { grid-template-columns: minmax(150px, 200px) minmax(0, 1fr) 130px; gap: 10px; }
+  .rent-hero .rent-qr-image { width: 96px; height: 96px; }
+
   .desktop-nav { display: none !important; }
   .nav-toggle { display: flex; }
   .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
