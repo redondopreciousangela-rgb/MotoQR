@@ -11,7 +11,7 @@
   </div>
 </div>
 
-{% if not pending %}
+{% if not requests %}
   <div class="empty">No pending return requests.</div>
 {% else %}
 <div class="table-wrap">
@@ -20,15 +20,15 @@
       <tr><th>User</th><th>Motorcycle</th><th>Message</th><th>Date</th><th>Action</th></tr>
     </thead>
     <tbody>
-      {% for r in pending %}
+      {% for r in requests %}
       <tr>
         <td>{{ r.username }}</td>
         <td>{{ r.motorcycle }}</td>
-        <td>{{ r.message }}</td>
+        <td>{{ r.message or '—' }}</td>
         <td>{{ r.date }}</td>
         <td>
           <form method="post" style="display:flex;flex-wrap:wrap;gap:6px">
-            <input type="hidden" name="index" value="{{ loop.index0 }}" />
+            <input type="hidden" name="request_id" value="{{ r.id }}" />
             <button class="btn green filled" name="action" value="approve" type="submit">Approve</button>
             <button class="btn red" name="action" value="reject" type="submit">Reject</button>
           </form>
