@@ -359,24 +359,37 @@ def register_routes(app):
                   if r.get("username") == session["username"]
                   and r.get("status") in ("Rented", "Overdue")]
         if request.method == "POST":
-            rid = request.form.get("rental_id")
+            rid = request.form.get("rental_id", "").strip()
             rental = next((r for r in active if r.get("id") == rid), None)
             if not rental:
-                flash("Select a valid rental.", "warning")
+                flash("Select a valid active rental.", "warning")
             else:
                 returns = get_returns()
+                # Prevent duplicate pending return requests for the same rental.
+                already_pending = any(
+                    item.get("rental_id") == rid and item.get("status") == "Pending"
+                    for item in returns
+                )
+                if already_pending:
+                    flash("A return request is already pending for this rental.", "warning")
+                    return redirect(url_for("return_unit"))
+                message = request.form.get("message", "").strip()[:1000]
                 returns.append({
-                    "id": f"RT{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                    "id": f"RT{datetime.now().strftime('%Y%m%d%H%M%S')}{random.randint(10, 99)}",
                     "rental_id": rid,
                     "username": session["username"],
                     "motorcycle": rental.get("motorcycle"),
+                    "message": message,
                     "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     "status": "Pending",
                 })
                 save_returns(returns)
-                notify_admins("Return Request",
-                              f"{session['username']} wants to return {rental.get('motorcycle')}",
-                              ntype="info")
+                notify_admins(
+                    "Return Request",
+                    f"{session['username']} wants to return {rental.get('motorcycle')}."
+                    + (f"\\nNotes: {message}" if message else ""),
+                    ntype="info",
+                )
                 flash("Return request submitted.", "success")
                 return redirect(url_for("my_rentals"))
         return render_template("return.html", user=current_user(), rentals=active,

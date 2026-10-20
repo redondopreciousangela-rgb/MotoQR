@@ -11,21 +11,32 @@
   </div>
 </div>
 
+{% if not rentals %}
+  <div class="empty">
+    You don't have any active rentals to return right now.
+    <a href="{{ url_for('my_rentals') }}">View My Rentals</a>
+  </div>
+{% else %}
 <form method="post" class="form-card">
   <div class="field">
-    <label>MOTORCYCLE</label>
-    <select name="motorcycle" required>
-      {% for r in active %}
-      <option value="{{ r.motorcycle }}">{{ r.motorcycle }} ({{ r.status }})</option>
+    <label for="rental_id">MOTORCYCLE</label>
+    <select id="rental_id" name="rental_id" required>
+      <option value="" disabled selected>Select the motorcycle you are currently using</option>
+      {% for r in rentals %}
+      <option value="{{ r.id }}">
+        {{ r.motorcycle }} — {{ r.status }}{% if r.date %} · Started {{ r.date }}{% endif %}
+      </option>
       {% endfor %}
     </select>
+    <small class="field-help">Only your currently rented or overdue motorcycles are listed.</small>
   </div>
   <div class="field">
-    <label>MESSAGE</label>
-    <textarea name="message" placeholder="Condition notes, location, etc." required></textarea>
+    <label for="message">MESSAGE</label>
+    <textarea id="message" name="message" maxlength="1000" placeholder="Condition notes, location, etc."></textarea>
   </div>
   <button class="btn amber filled block" type="submit">SEND RETURN REQUEST</button>
 </form>
+{% endif %}
 {% endblock %}
 {% block scripts %}
 <script>if (window.lucide) lucide.createIcons();</script>
